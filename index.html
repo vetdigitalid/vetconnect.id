@@ -15,7 +15,7 @@
       <h1 class="text-xl font-bold flex items-center gap-2">🐾 VetBook</h1>
       <div class="flex items-center gap-2">
         <span id="db-status" class="text-[9px] bg-amber-500 text-white px-2 py-0.5 rounded-full">Connecting...</span>
-        <span id="page-tag" class="text-xs bg-teal-800 px-2 py-1 rounded-full">v3.1 Pro</span>
+        <span id="page-tag" class="text-xs bg-teal-800 px-2 py-1 rounded-full">v3.3 Pro</span>
       </div>
     </div>
   </header>
@@ -62,6 +62,7 @@
     <section class="space-y-3">
       <h3 class="text-md font-bold text-gray-800 flex items-center gap-1">📚 Digital Produk</h3>
 
+      <!-- Spreadsheet -->
       <div class="bg-white p-4 rounded-xl border border-teal-100 flex justify-between items-center shadow-sm">
         <div class="pr-2">
           <span class="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md">Spreadsheet</span>
@@ -69,6 +70,54 @@
           <p class="text-sm font-semibold text-teal-600 mt-1">Rp 55.000</p>
         </div>
         <button type="button" onclick="pilihLayanan('Digital Produk: Kalkulator Formulasi Pakan Mandiri', 55000)" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-teal-700 active:scale-95 transition-all shrink-0">
+          Beli
+        </button>
+      </div>
+
+      <!-- E-Book 1 -->
+      <div class="bg-white p-4 rounded-xl border border-teal-100 flex justify-between items-center shadow-sm">
+        <div class="pr-2">
+          <span class="text-[10px] font-bold uppercase tracking-wider bg-teal-100 text-teal-800 px-2 py-0.5 rounded-md">E-Book</span>
+          <h4 class="font-bold text-gray-900 mt-1 text-sm">Panduan Pemeliharaan Unggas Yang Efisien & Minim Bau</h4>
+          <p class="text-sm font-semibold text-teal-600 mt-1">Rp 99.000</p>
+        </div>
+        <button type="button" onclick="pilihLayanan('Digital Produk: Panduan Unggas Minim Bau', 99000)" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-teal-700 active:scale-95 transition-all shrink-0">
+          Beli
+        </button>
+      </div>
+
+      <!-- E-Book 2 -->
+      <div class="bg-white p-4 rounded-xl border border-teal-100 flex justify-between items-center shadow-sm">
+        <div class="pr-2">
+          <span class="text-[10px] font-bold uppercase tracking-wider bg-teal-100 text-teal-800 px-2 py-0.5 rounded-md">E-Book</span>
+          <h4 class="font-bold text-gray-900 mt-1 text-sm">Cegah Sebelum Mahal - Resep Sehat Anabul Hemat ala Dokter Hewan</h4>
+          <p class="text-sm font-semibold text-teal-600 mt-1">Rp 69.000</p>
+        </div>
+        <button type="button" onclick="pilihLayanan('Digital Produk: Cegah Sebelum Mahal', 69000)" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-teal-700 active:scale-95 transition-all shrink-0">
+          Beli
+        </button>
+      </div>
+
+      <!-- E-Book 3 -->
+      <div class="bg-white p-4 rounded-xl border border-teal-100 flex justify-between items-center shadow-sm">
+        <div class="pr-2">
+          <span class="text-[10px] font-bold uppercase tracking-wider bg-purple-100 text-purple-800 px-2 py-0.5 rounded-md">E-Book Vet</span>
+          <h4 class="font-bold text-gray-900 mt-1 text-sm">Strategi Vet Dapatkan Cash Flow Legal Tanpa Harus Buka Klinik Sendiri</h4>
+          <p class="text-sm font-semibold text-teal-600 mt-1">Rp 119.000</p>
+        </div>
+        <button type="button" onclick="pilihLayanan('Digital Produk: Strategi Vet Cash Flow Legal', 119000)" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-teal-700 active:scale-95 transition-all shrink-0">
+          Beli
+        </button>
+      </div>
+
+      <!-- E-Book 4 -->
+      <div class="bg-white p-4 rounded-xl border border-teal-100 flex justify-between items-center shadow-sm">
+        <div class="pr-2">
+          <span class="text-[10px] font-bold uppercase tracking-wider bg-rose-100 text-rose-800 px-2 py-0.5 rounded-md">E-Book P3K</span>
+          <h4 class="font-bold text-gray-900 mt-1 text-sm">P3K Anabul - Panduan Praktis & Langkah Cepat Penanganan Darurat Anabul di Rumah</h4>
+          <p class="text-sm font-semibold text-teal-600 mt-1">Rp 60.000</p>
+        </div>
+        <button type="button" onclick="pilihLayanan('Digital Produk: P3K Anabul', 60000)" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-teal-700 active:scale-95 transition-all shrink-0">
           Beli
         </button>
       </div>
@@ -121,9 +170,9 @@
     <!-- Footer -->
     <footer class="text-center py-6 text-xs text-gray-400">
       <p>© 2026 VetBook. All rights reserved.</p>
-      <a href="admin.html" class="text-gray-400 hover:text-teal-600 underline text-[11px] mt-2 inline-block">
+      <button type="button" onclick="aksesAdmin()" class="text-gray-400 hover:text-teal-600 underline text-[11px] mt-2 inline-block">
         🔐 Panel Admin Verifikasi
-      </a>
+      </button>
     </footer>
   </main>
 
@@ -233,7 +282,7 @@
 
   </main>
 
-  <!-- Script Logika Aplikasi & Sinkronisasi Realtime -->
+  <!-- Script Logika Aplikasi & Proteksi Admin -->
   <script>
     const SUPABASE_URL = "https://gobaqeeadobzpscqexax.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvYmFxZWVhZG9ienBzY3FleGF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODY2ODEsImV4cCI6MjEwNTE2MjY4MX0.Usq9ECO3WQ4u7CXei7ylSBkefoMgFCL03qRwROMJs7U";
@@ -259,21 +308,18 @@
       let name = urlParams.get('name');
       let room = urlParams.get('room');
 
-      // Jika URL membawa parameter ruang chat (link dari WhatsApp)
       if (mode === 'chat' && room) {
         sessionStorage.setItem('vet_mode', mode);
         sessionStorage.setItem('vet_role', role);
         sessionStorage.setItem('vet_name', name);
         sessionStorage.setItem('vet_room', room);
       } else {
-        // Ambil dari sessionStorage jika halaman hanya di-refresh saat berada di ruang chat
         mode = sessionStorage.getItem('vet_mode');
         role = sessionStorage.getItem('vet_role');
         name = sessionStorage.getItem('vet_name');
         room = sessionStorage.getItem('vet_room');
       }
 
-      // Cek Koneksi Supabase & Tampilkan Status
       if (dbSupabase) {
         try {
           const { data, error } = await dbSupabase.from('messages').select('id').limit(1);
@@ -290,7 +336,6 @@
         }
       }
 
-      // Tampilkan Tampilan Percakapan hanya jika ada room id aktif
       if (mode === 'chat' && room) {
         document.getElementById('view-main').classList.add('hidden');
         document.getElementById('view-chat').classList.remove('hidden');
@@ -310,11 +355,20 @@
         await muatRiwayatChat();
         pollInterval = setInterval(muatRiwayatChat, 2000);
       } else {
-        // Jika tidak ada mode chat, pastikan kembali ke Halaman Utama (Booking)
         document.getElementById('view-main').classList.remove('hidden');
         document.getElementById('view-chat').classList.add('hidden');
       }
     });
+
+    // Fitur Masuk Admin Dengan Password
+    function aksesAdmin() {
+      const inputPass = prompt("Masukkan Kata Sandi Panel Admin:");
+      if (inputPass === "210794") {
+        window.location.href = "admin.html";
+      } else if (inputPass !== null) {
+        alert("Kata sandi salah! Akses ditolak.");
+      }
+    }
 
     function keluarKeHome() {
       sessionStorage.clear();
