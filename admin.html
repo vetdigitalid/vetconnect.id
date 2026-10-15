@@ -134,8 +134,8 @@
 
         const tgl = item.tanggal_booking || (item.created_at ? item.created_at.split('T')[0] : '-');
 
-        const dokterChatUrl = `https://vetdigitalid.github.io/index.html?mode=chat&role=vet&name=drh.%20Najib&room=${item.booking_id}`;
-        const klienChatUrl = `https://vetdigitalid.github.io/index.html?mode=chat&role=client&name=${encodeURIComponent(item.nama_pemilik || 'Klien')}&room=${item.booking_id}`;
+        const dokterChatUrl = `https://vetconnect.my.id/index.html?mode=chat&role=vet&name=drh.%20Najib&room=${item.booking_id}`;
+        const klienChatUrl = `https://vetconnect.my.id/index.html?mode=chat&role=client&name=${encodeURIComponent(item.nama_pemilik || 'Klien')}&room=${item.booking_id}`;
 
         const pesanWA = `Halo Kak ${item.nama_pemilik}, pembayaran untuk pesanan *${item.layanan}* sudah kami verifikasi.%0A%0A` +
                         (isTeleVet ? `Silakan masuk ke Ruang Konsultasi TeleVet melalui link berikut:%0A${encodeURIComponent(klienChatUrl)}` : `Terima kasih telah berbelanja digital produk di VetBook!`);
