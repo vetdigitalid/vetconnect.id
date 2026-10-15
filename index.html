@@ -52,7 +52,7 @@
           <p class="text-xs text-gray-500">Layanan kunjungan (no include)</p>
           <p class="text-sm font-semibold text-teal-600 mt-1">Rp 250.000</p>
         </div>
-        <button type="button" onclick="pilihLayanan('Vaksinasi Anabul', 200000)" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-teal-700 active:scale-95 transition-all shrink-0">
+        <button type="button" onclick="pilihLayanan('Vaksinasi Anabul', 250000)" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-teal-700 active:scale-95 transition-all shrink-0">
           Pilih
         </button>
       </div>
@@ -182,7 +182,7 @@
     
     <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex justify-between items-center">
       <div class="flex items-center gap-3">
-        <img src="file_0000000042d4820bb86a49f0f9ade3e6.png" class="w-10 h-10 rounded-full object-cover border border-teal-500" onerror="this.src='https://via.placeholder.com/150?text=drh.+Najib'">
+        <img src="file_00000000aac8820798f630c2a49481f6.png" class="w-10 h-10 rounded-full object-cover border border-teal-500" onerror="this.src='https://via.placeholder.com/150?text=drh.+Najib'">
         <div>
           <h2 class="font-bold text-sm text-gray-900">drh. Najib</h2>
           <span class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">Online</span>
@@ -373,7 +373,7 @@
     function keluarKeHome() {
       sessionStorage.clear();
       localStorage.clear();
-      window.location.href = window.location.pathname;
+      window.location.href = "https://vetconnect.my.id/";
     }
 
     function pilihLayanan(nama, harga) {
@@ -410,12 +410,21 @@
         created_at: new Date().toISOString()
       };
 
+      // Simpan Backup Lokal di Perangkat
       let localData = JSON.parse(localStorage.getItem('vetbook_bookings') || '[]');
       localData.unshift(dataBaru);
       localStorage.setItem('vetbook_bookings', JSON.stringify(localData));
 
+      // Simpan Secara Aman ke Database Supabase Server
       if (dbSupabase) {
-        try { await dbSupabase.from('bookings').insert([dataBaru]); } catch (e) {}
+        try { 
+          const { error } = await dbSupabase.from('bookings').insert([dataBaru]);
+          if (error) {
+            console.error('Gagal simpan booking ke Supabase:', error.message);
+          }
+        } catch (e) {
+          console.error('Error koneksi Supabase:', e);
+        }
       }
 
       const adminWA = "6281215667746";
