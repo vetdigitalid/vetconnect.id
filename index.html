@@ -15,7 +15,7 @@
       <h1 class="text-xl font-bold flex items-center gap-2">🐾 VetBook</h1>
       <div class="flex items-center gap-2">
         <span id="db-status" class="text-[9px] bg-amber-500 text-white px-2 py-0.5 rounded-full">Connecting...</span>
-        <span id="page-tag" class="text-xs bg-teal-800 px-2 py-1 rounded-full">v3.3 Pro</span>
+        <span id="page-tag" class="text-xs bg-teal-800 px-2 py-1 rounded-full">v3.4 Pro</span>
       </div>
     </div>
   </header>
@@ -437,7 +437,8 @@
                          `🐾 *Info Hewan:* ${encodeURIComponent(hewan)}%0A%0A` +
                          `💳 *Status:* Saya telah melakukan transfer pembayaran. Mohon verifikasi dan kirimkan link akses TeleVet. Terima kasih!`;
 
-      window.open(`https://wa.me/${adminWA}?text=${pesanAdmin}`, '_blank');
+      // Buka aplikasi WhatsApp tanpa membuat tab browser baru (menghindari error tab penuh di HP)
+      window.location.href = `https://wa.me/${adminWA}?text=${pesanAdmin}`;
     }
 
     function initClientTimer(durationSeconds) {
