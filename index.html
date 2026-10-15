@@ -15,7 +15,7 @@
       <h1 class="text-xl font-bold flex items-center gap-2">🐾 VetBook</h1>
       <div class="flex items-center gap-2">
         <span id="db-status" class="text-[9px] bg-amber-500 text-white px-2 py-0.5 rounded-full">Connecting...</span>
-        <span id="page-tag" class="text-xs bg-teal-800 px-2 py-1 rounded-full">v2.9 Pro</span>
+        <span id="page-tag" class="text-xs bg-teal-800 px-2 py-1 rounded-full">v3.1 Pro</span>
       </div>
     </div>
   </header>
@@ -197,7 +197,7 @@
         <div class="text-4xl">⏱️</div>
         <h3 class="font-bold text-lg text-gray-900">Sesi Konsultasi Selesai</h3>
         <p class="text-xs text-gray-600">Waktu percakapan telah berakhir atau diakhiri. Link ini sudah kadaluarsa.</p>
-        <button onclick="localStorage.clear(); window.location.href='index.html'" class="w-full bg-teal-600 text-white py-2.5 rounded-xl text-xs font-bold">
+        <button onclick="keluarKeHome()" class="w-full bg-teal-600 text-white py-2.5 rounded-xl text-xs font-bold">
           Kembali ke Halaman Utama
         </button>
       </div>
@@ -233,7 +233,7 @@
 
   </main>
 
-  <!-- Script Logika Aplikasi & Sinkronisasi Kuat -->
+  <!-- Script Logika Aplikasi & Sinkronisasi Realtime -->
   <script>
     const SUPABASE_URL = "https://gobaqeeadobzpscqexax.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvYmFxZWVhZG9ienBzY3FleGF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODY2ODEsImV4cCI6MjEwNTE2MjY4MX0.Usq9ECO3WQ4u7CXei7ylSBkefoMgFCL03qRwROMJs7U";
@@ -251,7 +251,6 @@
     let userRole = 'client';
     let currentRoomId = '';
     let currentUserName = '';
-    let lastLoadedMessageCount = 0;
 
     window.addEventListener('DOMContentLoaded', async () => {
       const urlParams = new URLSearchParams(window.location.search);
@@ -260,22 +259,24 @@
       let name = urlParams.get('name');
       let room = urlParams.get('room');
 
+      // Jika URL membawa parameter ruang chat (link dari WhatsApp)
       if (mode === 'chat' && room) {
-        localStorage.setItem('vet_mode', mode);
-        localStorage.setItem('vet_role', role);
-        localStorage.setItem('vet_name', name);
-        localStorage.setItem('vet_room', room);
+        sessionStorage.setItem('vet_mode', mode);
+        sessionStorage.setItem('vet_role', role);
+        sessionStorage.setItem('vet_name', name);
+        sessionStorage.setItem('vet_room', room);
       } else {
-        mode = localStorage.getItem('vet_mode');
-        role = localStorage.getItem('vet_role');
-        name = localStorage.getItem('vet_name');
-        room = localStorage.getItem('vet_room');
+        // Ambil dari sessionStorage jika halaman hanya di-refresh saat berada di ruang chat
+        mode = sessionStorage.getItem('vet_mode');
+        role = sessionStorage.getItem('vet_role');
+        name = sessionStorage.getItem('vet_name');
+        room = sessionStorage.getItem('vet_room');
       }
 
-      // Cek Koneksi Supabase
+      // Cek Koneksi Supabase & Tampilkan Status
       if (dbSupabase) {
         try {
-          const { error } = await dbSupabase.from('messages').select('id').limit(1);
+          const { data, error } = await dbSupabase.from('messages').select('id').limit(1);
           const badge = document.getElementById('db-status');
           if (!error) {
             badge.innerText = "Online";
@@ -289,6 +290,7 @@
         }
       }
 
+      // Tampilkan Tampilan Percakapan hanya jika ada room id aktif
       if (mode === 'chat' && room) {
         document.getElementById('view-main').classList.add('hidden');
         document.getElementById('view-chat').classList.remove('hidden');
@@ -305,10 +307,20 @@
           initClientTimer(20 * 60);
         }
 
-        muatRiwayatChat();
+        await muatRiwayatChat();
         pollInterval = setInterval(muatRiwayatChat, 2000);
+      } else {
+        // Jika tidak ada mode chat, pastikan kembali ke Halaman Utama (Booking)
+        document.getElementById('view-main').classList.remove('hidden');
+        document.getElementById('view-chat').classList.add('hidden');
       }
     });
+
+    function keluarKeHome() {
+      sessionStorage.clear();
+      localStorage.clear();
+      window.location.href = window.location.pathname;
+    }
 
     function pilihLayanan(nama, harga) {
       layananAktif = nama;
@@ -367,7 +379,7 @@
 
     function initClientTimer(durationSeconds) {
       const timerKey = `timer_${currentRoomId}`;
-      let savedTime = localStorage.getItem(timerKey);
+      let savedTime = sessionStorage.getItem(timerKey);
       let timeLeft = savedTime ? parseInt(savedTime) : durationSeconds;
 
       const display = document.getElementById('timer-display');
@@ -377,11 +389,11 @@
         let s = timeLeft % 60;
         display.innerText = `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
 
-        localStorage.setItem(timerKey, timeLeft);
+        sessionStorage.setItem(timerKey, timeLeft);
 
         if (--timeLeft < 0) {
           clearInterval(countdownInterval);
-          localStorage.removeItem(timerKey);
+          sessionStorage.removeItem(timerKey);
           akhiriSesi();
         }
       }, 1000);
@@ -390,7 +402,7 @@
     function akhiriSesi() {
       if (countdownInterval) clearInterval(countdownInterval);
       if (pollInterval) clearInterval(pollInterval);
-      localStorage.clear();
+      sessionStorage.clear();
       document.getElementById('modal-expired').classList.remove('hidden');
     }
 
@@ -439,9 +451,6 @@
         created_at: new Date().toISOString()
       };
 
-      // Tampilkan secara lokal langsung (Optimistic UI) agar instan muncul
-      renderPesanUI(pesanData);
-
       input.value = '';
       batalMedia();
 
@@ -449,8 +458,9 @@
         try {
           const { error } = await dbSupabase.from('messages').insert([pesanData]);
           if (error) {
-            console.error('Gagal simpan ke Supabase:', error.message);
-            alert('Pesan gagal terkirim ke server database: ' + error.message);
+            alert('Gagal mengirim pesan: ' + error.message);
+          } else {
+            muatRiwayatChat();
           }
         } catch (err) {
           console.error('Network error:', err);
@@ -467,38 +477,37 @@
           .eq('room_id', currentRoomId)
           .order('created_at', { ascending: true });
 
-        if (data && data.length > 0) {
-          if (data.length !== lastLoadedMessageCount) {
-            lastLoadedMessageCount = data.length;
-            const container = document.getElementById('chat-messages');
-            
-            const systemWelcome = container.firstElementChild.outerHTML;
-            container.innerHTML = systemWelcome;
-
-            data.forEach(msg => renderPesanUI(msg));
-          }
+        if (!error && data) {
+          renderSemuaPesan(data);
         }
       } catch (err) {
         console.log('Gagal memuat riwayat');
       }
     }
 
-    function renderPesanUI(msg) {
+    function renderSemuaPesan(dataPesan) {
       const container = document.getElementById('chat-messages');
-      const isMe = msg.sender_role === userRole;
       
-      const div = document.createElement('div');
-      div.className = `p-3 rounded-2xl max-w-[85%] shadow-sm ${isMe ? 'bg-teal-600 text-white ml-auto rounded-tr-none' : 'bg-white text-gray-800 border rounded-tl-none'}`;
-      
-      let mediaContent = '';
-      if (msg.media_url) {
-        mediaContent = `<img src="${msg.media_url}" class="w-48 h-32 object-cover rounded-lg mb-1 border">`;
-      }
+      const welcomeElement = container.querySelector('.bg-teal-100');
+      const welcomeHTML = welcomeElement ? welcomeElement.outerHTML : '';
 
-      const time = new Date(msg.created_at || Date.now()).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-      div.innerHTML = `<p class="font-bold text-[10px] opacity-80 mb-0.5">${msg.sender_name}</p><div>${mediaContent}${msg.message ? `<p>${msg.message}</p>` : ''}</div><span class="text-[8px] opacity-70 block mt-1 text-right">${time}</span>`;
+      let html = welcomeHTML;
 
-      container.appendChild(div);
+      dataPesan.forEach(msg => {
+        const isMe = msg.sender_role === userRole;
+        let mediaContent = msg.media_url ? `<img src="${msg.media_url}" class="w-48 h-32 object-cover rounded-lg mb-1 border">` : '';
+        const time = new Date(msg.created_at || Date.now()).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+        html += `
+          <div class="p-3 rounded-2xl max-w-[85%] shadow-sm ${isMe ? 'bg-teal-600 text-white ml-auto rounded-tr-none' : 'bg-white text-gray-800 border rounded-tl-none'}">
+            <p class="font-bold text-[10px] opacity-80 mb-0.5">${msg.sender_name}</p>
+            <div>${mediaContent}${msg.message ? `<p>${msg.message}</p>` : ''}</div>
+            <span class="text-[8px] opacity-70 block mt-1 text-right">${time}</span>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
       container.scrollTop = container.scrollHeight;
     }
 
