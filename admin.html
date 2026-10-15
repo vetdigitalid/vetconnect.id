@@ -52,7 +52,6 @@
 
   </main>
 
-  <!-- Script Logika Admin -->
   <script>
     const SUPABASE_URL = "https://gobaqeeadobzpscqexax.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvYmFxZWVhZG9ienBzY3FleGF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODY2ODEsImV4cCI6MjEwNTE2MjY4MX0.Usq9ECO3WQ4u7CXei7ylSBkefoMgFCL03qRwROMJs7U";
@@ -71,7 +70,6 @@
     async function muatSemuaPesanan() {
       const container = document.getElementById('booking-list');
 
-      // 1. Ambil data dari Supabase
       if (dbSupabase) {
         try {
           const { data, error } = await dbSupabase
@@ -87,7 +85,6 @@
         }
       }
 
-      // 2. Gabungkan/Fallback dengan localStorage jika Supabase kosong
       if (rawBookingsData.length === 0) {
         rawBookingsData = JSON.parse(localStorage.getItem('vetbook_bookings') || '[]');
       }
@@ -137,10 +134,7 @@
 
         const tgl = item.tanggal_booking || (item.created_at ? item.created_at.split('T')[0] : '-');
 
-        // URL Room Chat Dokter
         const dokterChatUrl = `https://vetdigitalid.github.io/index.html?mode=chat&role=vet&name=drh.%20Najib&room=${item.booking_id}`;
-        
-        // Link Konsultasi Klien (untuk dikirim ke WhatsApp Klien)
         const klienChatUrl = `https://vetdigitalid.github.io/index.html?mode=chat&role=client&name=${encodeURIComponent(item.nama_pemilik || 'Klien')}&room=${item.booking_id}`;
 
         const pesanWA = `Halo Kak ${item.nama_pemilik}, pembayaran untuk pesanan *${item.layanan}* sudah kami verifikasi.%0A%0A` +
@@ -167,19 +161,16 @@
             </div>
 
             <div class="flex flex-wrap gap-2 pt-1 border-t border-gray-100">
-              <!-- Tombol Buka Chat Dokter -->
               ${isTeleVet ? `
                 <a href="${dokterChatUrl}" target="_blank" class="bg-teal-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-teal-700 active:scale-95 transition-all flex items-center gap-1">
                   👨‍⚕️ Masuk Chat Dokter
                 </a>
               ` : ''}
 
-              <!-- Tombol Kirim WA -->
               <a href="https://wa.me/${item.whatsapp}?text=${pesanWA}" target="_blank" onclick="updateStatusPesanan('${item.booking_id}', 'Aktif')" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-700 active:scale-95 transition-all flex items-center gap-1">
                 📲 Kirim WA ${isTeleVet ? '& Access Link' : ''}
               </a>
 
-              <!-- Tombol Selesaikan -->
               ${status !== 'Selesai' ? `
                 <button onclick="updateStatusPesanan('${item.booking_id}', 'Selesai')" class="bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-gray-300 active:scale-95 transition-all">
                   Tandai Selesai
@@ -194,7 +185,6 @@
     }
 
     async function updateStatusPesanan(bookingId, statusBaru) {
-      // 1. Update ke Supabase
       if (dbSupabase) {
         try {
           await dbSupabase
@@ -206,7 +196,6 @@
         }
       }
 
-      // 2. Update Local Storage
       let localData = JSON.parse(localStorage.getItem('vetbook_bookings') || '[]');
       let target = localData.find(b => b.booking_id === bookingId);
       if (target) {
@@ -214,7 +203,6 @@
         localStorage.setItem('vetbook_bookings', JSON.stringify(localData));
       }
 
-      // 3. Muat ulang tampilan
       muatSemuaPesanan();
     }
   </script>
