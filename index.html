@@ -13,7 +13,10 @@
   <header class="bg-teal-600 text-white p-4 shadow-md sticky top-0 z-10">
     <div class="max-w-md mx-auto flex justify-between items-center">
       <h1 class="text-xl font-bold flex items-center gap-2">🐾 VetBook</h1>
-      <span id="page-tag" class="text-xs bg-teal-800 px-2 py-1 rounded-full">v2.8 Pro</span>
+      <div class="flex items-center gap-2">
+        <span id="db-status" class="text-[9px] bg-amber-500 text-white px-2 py-0.5 rounded-full">Connecting...</span>
+        <span id="page-tag" class="text-xs bg-teal-800 px-2 py-1 rounded-full">v2.9 Pro</span>
+      </div>
     </div>
   </header>
 
@@ -250,14 +253,13 @@
     let currentUserName = '';
     let lastLoadedMessageCount = 0;
 
-    window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', async () => {
       const urlParams = new URLSearchParams(window.location.search);
       let mode = urlParams.get('mode');
       let role = urlParams.get('role');
       let name = urlParams.get('name');
       let room = urlParams.get('room');
 
-      // Simpan parameter ke localStorage agar aman saat refresh
       if (mode === 'chat' && room) {
         localStorage.setItem('vet_mode', mode);
         localStorage.setItem('vet_role', role);
@@ -268,6 +270,23 @@
         role = localStorage.getItem('vet_role');
         name = localStorage.getItem('vet_name');
         room = localStorage.getItem('vet_room');
+      }
+
+      // Cek Koneksi Supabase
+      if (dbSupabase) {
+        try {
+          const { error } = await dbSupabase.from('messages').select('id').limit(1);
+          const badge = document.getElementById('db-status');
+          if (!error) {
+            badge.innerText = "Online";
+            badge.className = "text-[9px] bg-emerald-500 text-white px-2 py-0.5 rounded-full";
+          } else {
+            badge.innerText = "DB Error";
+            badge.className = "text-[9px] bg-rose-500 text-white px-2 py-0.5 rounded-full";
+          }
+        } catch (e) {
+          document.getElementById('db-status').innerText = "Offline";
+        }
       }
 
       if (mode === 'chat' && room) {
@@ -286,7 +305,6 @@
           initClientTimer(20 * 60);
         }
 
-        // Muat data awal dan jalankan polling otomatis setiap 2 detik
         muatRiwayatChat();
         pollInterval = setInterval(muatRiwayatChat, 2000);
       }
@@ -421,17 +439,21 @@
         created_at: new Date().toISOString()
       };
 
+      // Tampilkan secara lokal langsung (Optimistic UI) agar instan muncul
+      renderPesanUI(pesanData);
+
       input.value = '';
       batalMedia();
 
       if (dbSupabase) {
         try {
           const { error } = await dbSupabase.from('messages').insert([pesanData]);
-          if (!error) {
-            muatRiwayatChat(); // Langsung muat ulang setelah terkirim
+          if (error) {
+            console.error('Gagal simpan ke Supabase:', error.message);
+            alert('Pesan gagal terkirim ke server database: ' + error.message);
           }
         } catch (err) {
-          console.log('Gagal mengirim pesan ke Supabase');
+          console.error('Network error:', err);
         }
       }
     }
@@ -446,12 +468,10 @@
           .order('created_at', { ascending: true });
 
         if (data && data.length > 0) {
-          // Hanya render ulang jika ada penambahan pesan baru
           if (data.length !== lastLoadedMessageCount) {
             lastLoadedMessageCount = data.length;
             const container = document.getElementById('chat-messages');
             
-            // Pertahankan pesan selamat datang sistem
             const systemWelcome = container.firstElementChild.outerHTML;
             container.innerHTML = systemWelcome;
 
@@ -459,7 +479,7 @@
           }
         }
       } catch (err) {
-        console.log('Gagal memuat riwayat chat');
+        console.log('Gagal memuat riwayat');
       }
     }
 
