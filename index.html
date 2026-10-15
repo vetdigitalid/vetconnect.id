@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VetBook - Booking & Digital Shop</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Library Supabase via CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans pb-10">
@@ -79,6 +80,28 @@
           Beli
         </button>
       </div>
+
+      <div class="bg-white p-4 rounded-xl border border-teal-100 flex justify-between items-center shadow-sm">
+        <div class="pr-2">
+          <span class="text-[10px] font-bold uppercase tracking-wider bg-teal-100 text-teal-800 px-2 py-0.5 rounded-md">E-Book</span>
+          <h4 class="font-bold text-gray-900 mt-1 text-sm">Strategi Vet Dapatkan Cash Flow Legal Tanpa Harus Buka Klinik Sendiri</h4>
+          <p class="text-sm font-semibold text-teal-600 mt-1">Rp 119.000</p>
+        </div>
+        <button type="button" onclick="pilihLayanan('Digital Produk: Strategi Vet Dapatkan Cash Flow Legal', 119000)" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-teal-700 active:scale-95 transition-all shrink-0">
+          Beli
+        </button>
+      </div>
+
+      <div class="bg-white p-4 rounded-xl border border-teal-100 flex justify-between items-center shadow-sm">
+        <div class="pr-2">
+          <span class="text-[10px] font-bold uppercase tracking-wider bg-teal-100 text-teal-800 px-2 py-0.5 rounded-md">E-Book</span>
+          <h4 class="font-bold text-gray-900 mt-1 text-sm">Cegah Sebelum Mahal: Resep Sehat Anabul Hemat ala Dokter Hewan</h4>
+          <p class="text-sm font-semibold text-teal-600 mt-1">Rp 59.000</p>
+        </div>
+        <button type="button" onclick="pilihLayanan('Digital Produk: Cegah Sebelum Mahal', 59000)" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-teal-700 active:scale-95 transition-all shrink-0">
+          Beli
+        </button>
+      </div>
     </section>
 
     <!-- Form Booking & Pembayaran -->
@@ -128,6 +151,15 @@
 
   </main>
 
+  <!-- Footer dengan Pintasan Admin -->
+  <footer class="text-center py-6 text-xs text-gray-400">
+    <p>© 2026 VetBook. All rights reserved.</p>
+    <a href="admin.html" class="text-gray-400 hover:text-teal-600 underline text-[11px] mt-2 inline-block">
+      🔐 Panel Admin Verifikasi
+    </a>
+  </footer>
+
+  <!-- Script Logika Penyimpanan Data & WhatsApp -->
   <script>
     const SUPABASE_URL = "https://gobaqeeadobzpscqexax.supabase.co";
     const SUPABASE_KEY = "sb_publishable_u_79Qw9qcA_hhfTx01w2fA_Cu";
@@ -158,34 +190,46 @@
         return;
       }
 
-      // Simpan ke Supabase jika ada
-      let bookingId = 'BK-' + Math.floor(100000 + Math.random() * 900000);
+      // Format Nomor WhatsApp agar diawali kode '62'
+      let cleanWA = whatsapp.replace(/[^0-9]/g, '');
+      if (cleanWA.startsWith('0')) {
+        cleanWA = '62' + cleanWA.substring(1);
+      }
+
+      const bookingId = 'BK-' + Math.floor(100000 + Math.random() * 900000);
+      const dataBaru = {
+        booking_id: bookingId,
+        nama_pemilik: pemilik, 
+        whatsapp: cleanWA,
+        info_hewan: hewan, 
+        layanan: layananAktif, 
+        tanggal_booking: tanggal,
+        status: 'Pending',
+        created_at: new Date().toISOString()
+      };
+
+      // 1. Simpan ke LocalStorage agar langsung terbaca di admin.html
+      let localData = JSON.parse(localStorage.getItem('vetbook_bookings') || '[]');
+      localData.unshift(dataBaru);
+      localStorage.setItem('vetbook_bookings', JSON.stringify(localData));
+
+      // 2. Simpan ke Supabase jika tersambung
       if (dbSupabase) {
         try {
-          await dbSupabase.from('bookings').insert([
-            { 
-              booking_id: bookingId,
-              nama_pemilik: pemilik, 
-              whatsapp: whatsapp,
-              info_hewan: hewan, 
-              layanan: layananAktif, 
-              tanggal_booking: tanggal,
-              status: 'Menunggu Konfirmasi Admin'
-            }
-          ]);
+          await dbSupabase.from('bookings').insert([dataBaru]);
         } catch (err) {
-          console.log('Database insert skipped, proceeding to WhatsApp...');
+          console.log('Penyimpanan Supabase dilewati, menggunakan penyimpanan lokal');
         }
       }
 
-      // Kirim WhatsApp ke Admin (081215667746)
+      // 3. Kirim WhatsApp ke Admin (081215667746)
       const adminWA = "6281215667746";
       const pesanAdmin = `Halo Admin VetBook, saya ingin mengonfirmasi pembayaran pesanan:%0A%0A` +
                          `🆔 *ID:* ${bookingId}%0A` +
                          `📌 *Layanan:* ${encodeURIComponent(layananAktif)}%0A` +
                          `📅 *Tanggal:* ${encodeURIComponent(tanggal)}%0A` +
                          `👤 *Nama:* ${encodeURIComponent(pemilik)}%0A` +
-                         `📱 *No. WA Klien:* ${encodeURIComponent(whatsapp)}%0A` +
+                         `📱 *No. WA Klien:* ${encodeURIComponent(cleanWA)}%0A` +
                          `🐾 *Info Hewan:* ${encodeURIComponent(hewan)}%0A%0A` +
                          `💳 *Status:* Saya telah melakukan transfer pembayaran. Mohon verifikasi dan kirimkan link akses TeleVet. Terima kasih!`;
 
