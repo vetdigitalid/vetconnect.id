@@ -31,7 +31,6 @@
 
     <!-- Container Daftar Pesanan -->
     <div id="daftar-pesanan" class="space-y-4">
-      <!-- Pesanan akan dimuat secara dinamis di sini -->
       <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 text-center text-gray-500 text-sm">
         Memuat data pesanan...
       </div>
@@ -48,35 +47,28 @@
       dbSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     }
 
-    // Dummy Data default jika database kosong/testing agar langsung terlihat
-    let pesananList = [
-      {
-        id: 'BK-982143',
-        nama_pemilik: 'Budi Santoso',
-        whatsapp: '6281234567890',
-        layanan: 'TeleVet (Pet n Poultry)',
-        tanggal_booking: '2026-10-16',
-        info_hewan: 'Miko (Kucing Persia) / Lemes',
-        status: 'Pending'
-      }
-    ];
+    let pesananList = [];
 
     async function muatPesanan() {
       const container = document.getElementById('daftar-pesanan');
       container.innerHTML = '<div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 text-center text-gray-500 text-sm">Memuat data...</div>';
 
-      // Ambil dari Supabase jika ada
+      // 1. Ambil dari LocalStorage terlebih dahulu
+      let localData = JSON.parse(localStorage.getItem('vetbook_bookings') || '[]');
+
+      // 2. Ambil dari Supabase jika ada
       if (dbSupabase) {
         try {
           const { data, error } = await dbSupabase.from('bookings').select('*').order('created_at', { ascending: false });
           if (data && data.length > 0) {
-            pesananList = data;
+            localData = data;
           }
         } catch (err) {
-          console.log('Menggunakan data lokal/fallback');
+          console.log('Menggunakan data lokal');
         }
       }
 
+      pesananList = localData;
       renderPesanan();
     }
 
@@ -85,15 +77,13 @@
       container.innerHTML = '';
 
       if (pesananList.length === 0) {
-        container.innerHTML = '<div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 text-center text-gray-500 text-sm">Belum ada pesanan masuk.</div>';
+        container.innerHTML = '<div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 text-center text-gray-500 text-sm">Belum ada pesanan masuk. Selesaikan order dari halaman utama terlebih dahulu.</div>';
         return;
       }
 
       pesananList.forEach((item, index) => {
         const isLunas = item.status === 'Lunas';
         const roomId = item.room_id || ('ROOM-' + Math.floor(100000 + Math.random() * 900000));
-        
-        // Simpan room_id di item jika belum ada
         item.room_id = roomId;
 
         const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
@@ -105,12 +95,12 @@
         card.innerHTML = `
           <div class="flex justify-between items-start border-b pb-3">
             <div>
-              <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">${item.id || 'BK-' + index}</span>
+              <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">${item.booking_id || item.id || 'BK-' + index}</span>
               <h3 class="font-bold text-gray-900 text-base">${item.nama_pemilik}</h3>
               <p class="text-xs text-teal-600 font-semibold">${item.layanan}</p>
             </div>
             <div>
-              <span id="badge-${index}" class="text-xs px-2.5 py-1 rounded-full font-bold ${isLunas ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+              <span class="text-xs px-2.5 py-1 rounded-full font-bold ${isLunas ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
                 ${item.status || 'Pending'}
               </span>
             </div>
@@ -123,7 +113,7 @@
           </div>
 
           <!-- Bagian Tombol Aksi -->
-          <div id="action-area-${index}" class="pt-2 space-y-2">
+          <div class="pt-2 space-y-2">
             ${!isLunas ? `
               <button onclick="konfirmasiLunas(${index})" class="w-full bg-amber-600 text-white py-2.5 rounded-xl font-bold text-xs shadow hover:bg-amber-700 transition-all">
                 ✅ Konfirmasi Pembayaran Lunas
@@ -150,10 +140,13 @@
     async function konfirmasiLunas(index) {
       pesananList[index].status = 'Lunas';
       
-      // Update ke database jika tersambung
-      if (dbSupabase && pesananList[index].id) {
+      // Update LocalStorage
+      localStorage.setItem('vetbook_bookings', JSON.stringify(pesananList));
+
+      // Update Database jika tersambung
+      if (dbSupabase && pesananList[index].booking_id) {
         try {
-          await dbSupabase.from('bookings').update({ status: 'Lunas' }).eq('booking_id', pesananList[index].id);
+          await dbSupabase.from('bookings').update({ status: 'Lunas' }).eq('booking_id', pesananList[index].booking_id);
         } catch (err) {
           console.log('Update database skipped');
         }
@@ -163,9 +156,9 @@
     }
 
     function kirimWaKlien(wa, nama, link) {
-      const pesan = `Halo Kak *${nama}*, pembayaran TeleVet Anda telah dikonfirmasi *LUNAS* oleh Admin VetBook.%n%n` +
-                    `Silakan klik tautan di bawah ini untuk masuk ke ruang konsultasi bersama drh. Najib:%n` +
-                    `${link}%n%n` +
+      const pesan = `Halo Kak *${nama}*, pembayaran TeleVet Anda telah dikonfirmasi *LUNAS* oleh Admin VetBook.%0A%0A` +
+                    `Silakan klik tautan di bawah ini untuk masuk ke ruang konsultasi bersama drh. Najib:%0A` +
+                    `${link}%0A%0A` +
                     `_(Catatan: Sesi konsultasi aktif dengan timer 20 menit). Terima kasih!_`;
 
       window.open(`https://wa.me/${wa}?text=${pesan}`, '_blank');
@@ -173,15 +166,14 @@
 
     function kirimWaVet(nama, link) {
       const nomorVet = "6281215667746";
-      const pesan = `Halo drh. Najib, pembayaran TeleVet untuk klien *${nama}* telah lunas.%n%n` +
-                    `Silakan masuk ke ruang konsultasi sebagai Dokter melalui tautan berikut:%n` +
-                    `${link}%n%n` +
+      const pesan = `Halo drh. Najib, pembayaran TeleVet untuk klien *${nama}* telah lunas.%0A%0A` +
+                    `Silakan masuk ke ruang konsultasi sebagai Dokter melalui tautan berikut:%0A` +
+                    `${link}%0A%0A` +
                     `_(Waktu konsultasi dokter tanpa batas waktu)._`;
 
       window.open(`https://wa.me/${nomorVet}?text=${pesan}`, '_blank');
     }
 
-    // Load data saat halaman dibuka
     muatPesanan();
   </script>
 </body>
