@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VetBook - Admin Panel Verifikasi</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans pb-12">
+
+  <!-- Header Admin -->
+  <header class="bg-teal-700 text-white p-4 shadow-md sticky top-0 z-10">
+    <div class="max-w-xl mx-auto flex justify-between items-center">
+      <h1 class="text-xl font-bold flex items-center gap-2">🛡️ VetBook Admin Panel</h1>
+      <span class="text-xs bg-teal-900 px-2.5 py-1 rounded-full">Admin Dashboard</span>
+    </div>
+  </header>
+
+  <main class="max-w-xl mx-auto p-4 space-y-6">
+
+    <!-- Card Instruksi -->
+    <section class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 space-y-3">
+      <h2 class="text-lg font-bold text-teal-800 border-b pb-2">📋 Verifikasi Pembayaran & Kirim Link Akses</h2>
+      <p class="text-xs text-gray-600">
+        Masukkan data pesanan klien yang masuk melalui WhatsApp Admin untuk menghasilkan link konsultasi otomatis dan mengirimkannya via WhatsApp ke Klien dan Vet.
+      </p>
+
+      <div class="space-y-3 pt-2">
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Nama Klien / Pemilik</label>
+          <input type="text" id="adm-name" placeholder="Contoh: Budi Santoso" class="w-full p-2.5 border rounded-lg text-sm">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Nomor WhatsApp Klien (Format: 628xxx)</label>
+          <input type="tel" id="adm-wa" placeholder="Contoh: 6281234567890" class="w-full p-2.5 border rounded-lg text-sm">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Jenis Layanan / Konsultasi</label>
+          <input type="text" id="adm-service" value="TeleVet (Pet n Poultry)" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 font-bold text-teal-800">
+        </div>
+
+        <button type="button" onclick="generateLinks()" class="w-full bg-teal-600 text-white py-3 rounded-xl font-bold text-sm shadow-md hover:bg-teal-700 transition-all">
+          ✨ Generate Link Ruang TeleVet
+        </button>
+      </div>
+    </section>
+
+    <!-- Hasil Generate Link & Tombol Kirim WA -->
+    <section id="result-section" class="bg-white p-5 rounded-2xl shadow-sm border border-teal-200 space-y-4 hidden">
+      <h3 class="text-md font-bold text-teal-700 border-b pb-2">✅ Link Akses Berhasil Dibuat</h3>
+
+      <div class="space-y-2 text-xs">
+        <div>
+          <span class="font-semibold text-gray-600">Link Akses Klien (Timer 20 Menit):</span>
+          <div class="flex items-center gap-2 mt-1">
+            <input type="text" id="link-klien" readonly class="w-full p-2 bg-gray-50 border rounded font-mono text-[11px]">
+            <button onclick="copyLink('link-klien')" class="bg-gray-200 px-3 py-2 rounded font-bold hover:bg-gray-300">Salin</button>
+          </div>
+        </div>
+
+        <div>
+          <span class="font-semibold text-gray-600">Link Akses Dokter / Vet (Tanpa Batas Waktu):</span>
+          <div class="flex items-center gap-2 mt-1">
+            <input type="text" id="link-vet" readonly class="w-full p-2 bg-gray-50 border rounded font-mono text-[11px]">
+            <button onclick="copyLink('link-vet')" class="bg-gray-200 px-3 py-2 rounded font-bold hover:bg-gray-300">Salin</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tombol Aksi Sesuai Permintaan -->
+      <div class="grid grid-cols-1 gap-3 pt-2">
+        <button type="button" onclick="kirimWaKlien()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold text-sm shadow-md hover:bg-emerald-700 transition-all flex items-center justify-center gap-2">
+          <span>📤 Kirim WA ke Klien (Berisi Link Chat Klien)</span>
+        </button>
+
+        <button type="button" onclick="kirimWaVet()" class="w-full bg-teal-800 text-white py-3 rounded-xl font-bold text-sm shadow-md hover:bg-teal-900 transition-all flex items-center justify-center gap-2">
+          <span>🩺 Kirim WA ke Vet/Dokter (Berisi Link Chat Vet)</span>
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    let generatedClientUrl = "";
+    let generatedVetUrl = "";
+
+    function generateLinks() {
+      const nama = document.getElementById('adm-name').value.trim();
+      const wa = document.getElementById('adm-wa').value.trim();
+      const layanan = document.getElementById('adm-service').value.trim();
+
+      if (!nama || !wa) {
+        alert('Mohon isi Nama Klien dan Nomor WhatsApp terlebih dahulu!');
+        return;
+      }
+
+      const roomId = 'ROOM-' + Math.floor(100000 + Math.random() * 900000);
+      const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
+
+      // Asumsi halaman chat konsultasi digabung/diarahkan ke file chat.html atau index.html dengan parameter role
+      generatedClientUrl = `${baseUrl}chat.html?room=${roomId}&role=client&name=${encodeURIComponent(nama)}`;
+      generatedVetUrl = `${baseUrl}chat.html?room=${roomId}&role=vet&name=${encodeURIComponent(nama)}`;
+
+      document.getElementById('link-klien').value = generatedClientUrl;
+      document.getElementById('link-vet').value = generatedVetUrl;
+
+      document.getElementById('result-section').classList.remove('hidden');
+      document.getElementById('result-section').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function copyLink(elementId) {
+      const input = document.getElementById(elementId);
+      input.select();
+      navigator.clipboard.writeText(input.value);
+      alert('Link berhasil disalin ke clipboard!');
+    }
+
+    function kirimWaKlien() {
+      const wa = document.getElementById('adm-wa').value.trim();
+      const nama = document.getElementById('adm-name').value.trim();
+
+      const pesan = `Halo Kak *${nama}*, pembayaran Anda telah dikonfirmasi LUNAS oleh Admin VetBook.%n%n` +
+                    `Silakan klik tautan di bawah ini untuk masuk ke ruang konsultasi TeleVet bersama drh. Najib:%n` +
+                    `${generatedClientUrl}%n%n` +
+                    `_(Catatan: Sesi konsultasi aktif dengan timer 20 menit). Terima kasih!_`;
+
+      window.open(`https://wa.me/${wa}?text=${pesan}`, '_blank');
+    }
+
+    function kirimWaVet() {
+      // Nomor Dokter / Vet (bisa disesuaikan ke nomor drh. Najib langsung)
+      const nomorVet = "6281215667746";
+      const nama = document.getElementById('adm-name').value.trim();
+
+      const pesan = `Halo drh. Najib, terdapat klien baru (*${nama}*) yang pembayaran TeleVet-nya telah lunas.%n%n` +
+                    `Silakan masuk ke ruang konsultasi sebagai Dokter melalui tautan berikut:%n` +
+                    `${generatedVetUrl}%n%n` +
+                    `_(Waktu konsultasi dokter tanpa batas waktu)._`;
+
+      window.open(`https://wa.me/${nomorVet}?text=${pesan}`, '_blank');
+    }
+  </script>
+</body>
+</html>
