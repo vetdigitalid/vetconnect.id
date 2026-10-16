@@ -15,7 +15,7 @@
       <h1 class="text-xl font-bold flex items-center gap-2">🐾 VetBook</h1>
       <div class="flex items-center gap-2">
         <span id="db-status" class="text-[9px] bg-amber-500 text-white px-2 py-0.5 rounded-full">Connecting...</span>
-        <span id="page-tag" class="text-xs bg-teal-800 px-2 py-1 rounded-full">v3.9 Pro</span>
+        <span id="page-tag" class="text-xs bg-teal-800 px-2 py-1 rounded-full">v4.0 Pro</span>
       </div>
     </div>
   </header>
@@ -419,27 +419,44 @@
                          `🐾 *Info Hewan:* ${encodeURIComponent(hewan)}\n\n` +
                          `💳 *Status:* Saya telah melakukan transfer pembayaran. Mohon verifikasi dan kirimkan link akses TeleVet. Terima kasih!`;
 
-      // Buka aplikasi WhatsApp langsung tanpa perantara
       window.location.href = `whatsapp://send?phone=${adminWA}&text=${encodeURIComponent(pesanAdmin)}`;
     }
 
+    // TIMER KLIEN YANG TETAP BERJALAN MESKI HALAMAN DI-REFRESH
     function initClientTimer(durationSeconds) {
-      let timeLeft = durationSeconds;
+      const timerEndTimeKey = `timer_end_${currentRoomId}`;
+      let endTime = sessionStorage.getItem(timerEndTimeKey);
+
+      if (!endTime) {
+        endTime = Date.now() + (durationSeconds * 1000);
+        sessionStorage.setItem(timerEndTimeKey, endTime);
+      } else {
+        endTime = parseInt(endTime);
+      }
+
       const display = document.getElementById('timer-display');
+
       countdownInterval = setInterval(() => {
+        let timeLeft = Math.floor((endTime - Date.now()) / 1000);
+
+        if (timeLeft <= 0) {
+          clearInterval(countdownInterval);
+          sessionStorage.removeItem(timerEndTimeKey);
+          display.innerText = "00:00";
+          akhiriSesi();
+          return;
+        }
+
         let m = Math.floor(timeLeft / 60);
         let s = timeLeft % 60;
         display.innerText = `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
-        if (--timeLeft < 0) {
-          clearInterval(countdownInterval);
-          akhiriSesi();
-        }
       }, 1000);
     }
 
     async function akhiriSesi() {
       if (countdownInterval) clearInterval(countdownInterval);
       if (pollInterval) clearInterval(pollInterval);
+      sessionStorage.removeItem(`timer_end_${currentRoomId}`);
       if (dbSupabase && currentRoomId) {
         await dbSupabase.from('bookings').update({ status: 'Selesai', is_expired: true }).eq('booking_id', currentRoomId);
       }
