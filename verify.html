@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verifikasi Resep Digital - VetConnect</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen p-4 flex items-center justify-center">
+
+  <div class="max-w-md w-full bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+    
+    <!-- Header -->
+    <div class="bg-teal-700 text-white p-5 text-center">
+      <h1 class="text-lg font-bold flex items-center justify-center gap-1.5">🐾 VetConnect E-Prescription</h1>
+      <p class="text-xs text-teal-200 mt-1">Sistem Verifikasi Keaslian Resep Digital Dokter Hewan</p>
+    </div>
+
+    <!-- Area Status -->
+    <div id="loading" class="p-8 text-center text-gray-500 text-xs">
+      <div class="text-2xl mb-2 animate-spin inline-block">🔄</div>
+      <p>Memeriksa keaslian dokumen di database server...</p>
+    </div>
+
+    <div id="content-valid" class="p-6 space-y-4 hidden">
+      <div class="bg-emerald-50 border border-emerald-200 p-3.5 rounded-xl text-center space-y-1">
+        <span class="text-2xl">✅</span>
+        <h2 class="font-bold text-emerald-800 text-sm">RESEP VERIFIKASI ASLI & RESMI</h2>
+        <p class="text-[11px] text-emerald-600">Terdaftar di Sistem TeleVet Official</p>
+      </div>
+
+      <div class="bg-gray-50 p-3.5 rounded-xl border text-xs space-y-2">
+        <div class="flex justify-between border-b pb-1.5">
+          <span class="text-gray-500">ID Konsultasi</span>
+          <span id="v-booking" class="font-bold font-mono text-teal-800"></span>
+        </div>
+        <div class="flex justify-between border-b pb-1.5">
+          <span class="text-gray-500">Tanggal Terbit</span>
+          <span id="v-tanggal" class="font-bold text-gray-700"></span>
+        </div>
+        <div class="flex justify-between border-b pb-1.5">
+          <span class="text-gray-500">Dokter Penanggung Jawab</span>
+          <span class="font-bold text-gray-800">drh. Nur Rohman Najib</span>
+        </div>
+        <div class="flex justify-between border-b pb-1.5">
+          <span class="text-gray-500">Pemilik Hewan</span>
+          <span id="v-pemilik" class="font-bold text-gray-800"></span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-500">Pasien Anabul</span>
+          <span id="v-hewan" class="font-bold text-teal-700"></span>
+        </div>
+      </div>
+
+      <div class="space-y-2 text-xs">
+        <h3 class="font-bold text-gray-800 border-b pb-1 text-teal-800">🩺 Diagnosis / Anamnesa:</h3>
+        <p id="v-diagnosis" class="bg-stone-50 p-2.5 rounded-lg border text-gray-700 italic"></p>
+
+        <h3 class="font-bold text-gray-800 border-b pb-1 text-teal-800 mt-3">💊 Preskripsi Obat & Dosis Resmi:</h3>
+        <pre id="v-obat" class="bg-stone-50 p-3 rounded-lg border text-gray-800 font-mono text-[11px] whitespace-pre-wrap leading-relaxed"></pre>
+
+        <h3 class="font-bold text-gray-800 border-b pb-1 text-teal-800 mt-3">📋 Catatan Edukasi Dokter:</h3>
+        <p id="v-edukasi" class="bg-stone-50 p-2.5 rounded-lg border text-gray-600 italic"></p>
+      </div>
+
+      <div class="text-[10px] text-center text-gray-400 pt-3 border-t">
+        <p>© 2026 VetConnect Consultation Platform. All rights reserved.</p>
+      </div>
+    </div>
+
+    <div id="content-invalid" class="p-8 text-center space-y-3 hidden">
+      <span class="text-4xl">❌</span>
+      <h2 class="font-bold text-rose-800 text-sm">Resep Tidak Ditemukan / Tidak Valid</h2>
+      <p class="text-xs text-gray-500">Dokumen resep dengan ID ini tidak terdaftar dalam database resmi kami. Harap berhati-hati terhadap potensi pemalsuan.</p>
+    </div>
+
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://gobaqeeadobzpscqexax.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvYmFxZWVhZG9ienBzY3FleGF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODY2ODEsImV4cCI6MjEwNTE2MjY4MX0.Usq9ECO3WQ4u7CXei7ylSBkefoMgFCL03qRwROMJs7U";
+    const dbSupabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const bookingId = urlParams.get('id');
+
+      if (!bookingId || !dbSupabase) {
+        tampilkanInvalid();
+        return;
+      }
+
+      try {
+        const { data, error } = await dbSupabase
+          .from('bookings')
+          .select('*')
+          .eq('booking_id', bookingId)
+          .single();
+
+        document.getElementById('loading').classList.add('hidden');
+
+        if (error || !data || !data.resep_obat) {
+          tampilkanInvalid();
+        } else {
+          document.getElementById('v-booking').innerText = data.booking_id;
+          document.getElementById('v-tanggal').innerText = data.resep_tanggal || '-';
+          document.getElementById('v-pemilik').innerText = data.nama_pemilik;
+          document.getElementById('v-hewan').innerText = data.resep_hewan || data.info_hewan;
+          document.getElementById('v-diagnosis').innerText = data.resep_diagnosis || '-';
+          document.getElementById('v-obat').innerText = data.resep_obat;
+          document.getElementById('v-edukasi').innerText = data.resep_edukasi || '-';
+
+          document.getElementById('content-valid').classList.remove('hidden');
+        }
+      } catch (e) {
+        tampilkanInvalid();
+      }
+    });
+
+    function tampilkanInvalid() {
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('content-invalid').classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
