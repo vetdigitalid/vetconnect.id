@@ -18,13 +18,13 @@
       <p class="text-xs text-teal-100 mt-0.5">Alat Bantu Perhitungan Dosis Praktik Konsultasi</p>
     </header>
 
-    <!-- Kartu Kalkulator -->
+    <!-- Kartu Utama Kalkulator -->
     <main class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 space-y-4">
       
       <!-- Input Berat Badan -->
       <div>
         <label class="block text-xs font-bold text-gray-700 mb-1">⚖️ Berat Badan Pasien (kg)</label>
-        <input type="number" step="0.01" id="calc-bb" placeholder="Contoh: 2.5" class="w-full p-3 border-2 border-teal-200 rounded-xl text-base font-bold text-teal-900 bg-teal-50/30 focus:outline-none focus:border-teal-500" oninput="hitungDosis()">
+        <input type="number" step="0.01" id="calc-bb" placeholder="Contoh: 2" class="w-full p-3 border-2 border-teal-200 rounded-xl text-base font-bold text-teal-900 bg-teal-50/30 focus:outline-none focus:border-teal-500" oninput="hitungDosis()">
       </div>
 
       <!-- Pilih Jenis Obat -->
@@ -34,7 +34,7 @@
           <option value="metacam">Metacam Syrup (Meloxicam 0.5 mg/ml) — 0.05 mg/kg</option>
           <option value="cefadroxil">Cefadroxil Syrup (125 mg/5ml) — 20 mg/kg</option>
           <option value="amoxicillin">Amoxicillin Syrup (125 mg/5ml) — 15 mg/kg</option>
-          <option value="toltrazuril">Toltrazuril 2.5% — 7 mg/kg</option>
+          <option value="toltrazuril">Toltrazuril 2.5% (25 mg/ml) — 7 mg/kg</option>
           <option value="custom">-- Custom (Input Dosis & Konsentrasi Manual) --</option>
         </select>
       </div>
@@ -71,7 +71,7 @@
       <div class="bg-teal-50 border-2 border-teal-500 p-4 rounded-xl text-center space-y-1">
         <p class="text-xs font-semibold text-teal-800 uppercase tracking-wider">Hasil Perhitungan Dosis Sekali Minum</p>
         <p id="hasil-volume" class="text-2xl font-black text-teal-700">0.00 ml</p>
-        <p id="hasil-detail-mg" class="text-[11px] text-gray-500 font-mono">(0.00 mg kebutuhan aktif)</p>
+        <p id="hasil-detail-mg" class="text-[11px] text-gray-500 font-mono">(0.00 mg aktif per pemberian)</p>
       </div>
 
       <!-- Teks Siap Salin ke WhatsApp / Catatan Medis -->
@@ -82,7 +82,7 @@
             📋 Salin Teks
           </button>
         </div>
-        <textarea id="teks-resep-output" rows="3" readonly class="w-full p-2.5 border rounded-xl bg-gray-50 text-xs font-mono text-gray-800 focus:outline-none"></textarea>
+        <textarea id="teks-resep-output" rows="4" readonly class="w-full p-2.5 border rounded-xl bg-gray-50 text-xs font-mono text-gray-800 focus:outline-none"></textarea>
       </div>
 
     </main>
@@ -97,12 +97,12 @@
   </div>
 
   <script>
-    // Master Database Obat
+    // Master Database Obat Lengkap Keterangan Sediaan
     const DATABASE_OBAT = {
-      metacam: { nama: "Metacam Syrup (Meloxicam)", dosisMgKg: 0.05, konsentrasiMgMl: 0.5, satuan: "ml" },
-      cefadroxil: { nama: "Cefadroxil Syrup", dosisMgKg: 20, konsentrasiMgMl: 25, satuan: "ml" }, // 125mg/5ml = 25mg/ml
-      amoxicillin: { nama: "Amoxicillin Syrup", dosisMgKg: 15, konsentrasiMgMl: 25, satuan: "ml" }, // 125mg/5ml = 25mg/ml
-      toltrazuril: { nama: "Toltrazuril 2.5%", dosisMgKg: 7, konsentrasiMgMl: 25, satuan: "ml" }
+      metacam: { nama: "Metacam Syrup", sediaan: "0.5 mg/ml", dosisMgKg: 0.05, konsentrasiMgMl: 0.5, satuan: "ml" },
+      cefadroxil: { nama: "Cefadroxil Syrup", sediaan: "125 mg/5ml", dosisMgKg: 20, konsentrasiMgMl: 25, satuan: "ml" },
+      amoxicillin: { nama: "Amoxicillin Syrup", sediaan: "125 mg/5ml", dosisMgKg: 15, konsentrasiMgMl: 25, satuan: "ml" },
+      toltrazuril: { nama: "Toltrazuril 2.5%", sediaan: "25 mg/ml", dosisMgKg: 7, konsentrasiMgMl: 25, satuan: "ml" }
     };
 
     function hitungDosis() {
@@ -114,6 +114,7 @@
       const customSection = document.getElementById('section-custom');
 
       let namaObat = "";
+      let sediaanObat = "";
       let dosisMgKg = 0;
       let konsentrasiMgMl = 0;
       let satuan = "ml";
@@ -121,12 +122,14 @@
       if (obatKey === "custom") {
         customSection.classList.remove('hidden');
         namaObat = "Obat Custom";
+        sediaanObat = "Custom";
         dosisMgKg = parseFloat(document.getElementById('custom-dosis').value) || 0;
         konsentrasiMgMl = parseFloat(document.getElementById('custom-konsentrasi').value) || 0;
       } else {
         customSection.classList.add('hidden');
         const dataObat = DATABASE_OBAT[obatKey];
         namaObat = dataObat.nama;
+        sediaanObat = dataObat.sediaan;
         dosisMgKg = dataObat.dosisMgKg;
         konsentrasiMgMl = dataObat.konsentrasiMgMl;
         satuan = dataObat.satuan;
@@ -139,18 +142,17 @@
         return;
       }
 
-      // Rumus Dosis Medis Vet
+      // Rumus Dosis Medis
       const kebutuhanMg = bb * dosisMgKg;
       const volumeHasil = kebutuhanMg / konsentrasiMgMl;
-
       const formatVolume = volumeHasil.toFixed(2);
       
       document.getElementById('hasil-volume').innerText = `${formatVolume} ${satuan}`;
       document.getElementById('hasil-detail-mg').innerText = `(${kebutuhanMg.toFixed(2)} mg aktif per pemberian)`;
 
-      // Generate Format Teks Resep
-      const teksFormat = `R/ ${namaObat}\n` +
-                         `   BB: ${bb} kg | Dosis: ${dosisMgKg} mg/kg\n` +
+      // Format Teks Resep yang Lengkap & Informatif
+      const teksFormat = `R/ ${namaObat} (${sediaanObat})\n` +
+                         `   BB: ${bb} kg | Dosis: ${dosisMgKg} mg/kg (${kebutuhanMg.toFixed(2)} mg)\n` +
                          `   Pemberian: ${formatVolume} ${satuan} (${frekuensi} selama ${durasi})`;
       
       document.getElementById('teks-resep-output').value = teksFormat;
