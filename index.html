@@ -15,7 +15,7 @@
       <h1 class="text-xl font-bold flex items-center gap-2">🐾 VetBook</h1>
       <div class="flex items-center gap-2">
         <span id="db-status" class="text-[9px] bg-amber-500 text-white px-2 py-0.5 rounded-full">Connecting...</span>
-        <span id="page-tag" class="text-xs bg-teal-800 px-2 py-1 rounded-full">v4.1 Pro</span>
+        <span id="page-tag" class="text-xs bg-teal-800 px-2 py-1 rounded-full">v4.2 Pro</span>
       </div>
     </div>
   </header>
@@ -410,14 +410,16 @@
       }
 
       const adminWA = "6281215667746";
+      
+      // Pesan WhatsApp yang dirapikan (tanpa teks berantakan %20)
       const pesanAdmin = `Halo Admin VetBook, saya ingin mengonfirmasi pembayaran pesanan:\n\n` +
-                         `🆔 *ID:* ${bookingId}\n` +
-                         `📌 *Layanan:* ${encodeURIComponent(layananAktif)}\n` +
-                         `📅 *Tanggal:* ${encodeURIComponent(tanggal)}\n` +
-                         `👤 *Nama:* ${encodeURIComponent(pemilik)}\n` +
-                         `📱 *No. WA Klien:* ${encodeURIComponent(cleanWA)}\n` +
-                         `🐾 *Info Hewan:* ${encodeURIComponent(hewan)}\n\n` +
-                         `💳 *Status:* Saya telah melakukan transfer pembayaran. Mohon verifikasi dan kirimkan link akses TeleVet. Terima kasih!`;
+                         `🆔 ID: ${bookingId}\n` +
+                         `📌 Layanan: ${layananAktif}\n` +
+                         `📅 Tanggal: ${tanggal}\n` +
+                         `👤 Nama: ${pemilik}\n` +
+                         `📱 No. WA Klien: ${cleanWA}\n` +
+                         `🐾 Info Hewan: ${hewan}\n\n` +
+                         `💳 Status: Saya telah melakukan transfer pembayaran. Mohon verifikasi dan kirimkan link akses TeleVet. Terima kasih!`;
 
       window.location.href = `whatsapp://send?phone=${adminWA}&text=${encodeURIComponent(pesanAdmin)}`;
     }
