@@ -12,38 +12,39 @@
   <div class="max-w-md w-full bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
     
     <!-- Header -->
-    <div class="bg-teal-700 text-white p-5 text-center">
+    <div class="bg-teal-800 text-white p-5 text-center">
       <h1 class="text-lg font-bold flex items-center justify-center gap-1.5">🐾 VetConnect E-Prescription</h1>
-      <p class="text-xs text-teal-200 mt-1">Sistem Verifikasi Keaslian Resep Digital Dokter Hewan</p>
+      <p class="text-xs text-teal-200 mt-1">Sistem Verifikasi Keaslian Resep Digital TeleVet</p>
     </div>
 
-    <!-- Area Status -->
+    <!-- Loading -->
     <div id="loading" class="p-8 text-center text-gray-500 text-xs">
       <div class="text-2xl mb-2 animate-spin inline-block">🔄</div>
       <p>Memeriksa keaslian dokumen di database server...</p>
     </div>
 
+    <!-- Tampilan Valid / Aman -->
     <div id="content-valid" class="p-6 space-y-4 hidden">
       <div class="bg-emerald-50 border border-emerald-200 p-3.5 rounded-xl text-center space-y-1">
-        <span class="text-2xl">✅</span>
+        <span class="text-3xl">🛡️</span>
         <h2 class="font-bold text-emerald-800 text-sm">RESEP VERIFIKASI ASLI & RESMI</h2>
-        <p class="text-[11px] text-emerald-600">Terdaftar di Sistem TeleVet Official</p>
+        <p class="text-[11px] text-emerald-600">Dokumen Medis Terdaftar di Database TeleVet</p>
       </div>
 
-      <div class="bg-gray-50 p-3.5 rounded-xl border text-xs space-y-2">
-        <div class="flex justify-between border-b pb-1.5">
+      <div class="bg-gray-50 p-4 rounded-xl border text-xs space-y-2.5">
+        <div class="flex justify-between border-b pb-2">
           <span class="text-gray-500">ID Konsultasi</span>
           <span id="v-booking" class="font-bold font-mono text-teal-800"></span>
         </div>
-        <div class="flex justify-between border-b pb-1.5">
+        <div class="flex justify-between border-b pb-2">
           <span class="text-gray-500">Tanggal Terbit</span>
           <span id="v-tanggal" class="font-bold text-gray-700"></span>
         </div>
-        <div class="flex justify-between border-b pb-1.5">
+        <div class="flex justify-between border-b pb-2">
           <span class="text-gray-500">Dokter Penanggung Jawab</span>
           <span class="font-bold text-gray-800">drh. Nur Rohman Najib</span>
         </div>
-        <div class="flex justify-between border-b pb-1.5">
+        <div class="flex justify-between border-b pb-2">
           <span class="text-gray-500">Pemilik Hewan</span>
           <span id="v-pemilik" class="font-bold text-gray-800"></span>
         </div>
@@ -53,22 +54,21 @@
         </div>
       </div>
 
-      <div class="space-y-2 text-xs">
-        <h3 class="font-bold text-gray-800 border-b pb-1 text-teal-800">🩺 Diagnosis / Anamnesa:</h3>
-        <p id="v-diagnosis" class="bg-stone-50 p-2.5 rounded-lg border text-gray-700 italic"></p>
-
-        <h3 class="font-bold text-gray-800 border-b pb-1 text-teal-800 mt-3">💊 Preskripsi Obat & Dosis Resmi:</h3>
-        <pre id="v-obat" class="bg-stone-50 p-3 rounded-lg border text-gray-800 font-mono text-[11px] whitespace-pre-wrap leading-relaxed"></pre>
-
-        <h3 class="font-bold text-gray-800 border-b pb-1 text-teal-800 mt-3">📋 Catatan Edukasi Dokter:</h3>
-        <p id="v-edukasi" class="bg-stone-50 p-2.5 rounded-lg border text-gray-600 italic"></p>
+      <!-- Kotak Edukasi / Proteksi Keamanan Resep -->
+      <div class="bg-amber-50 border border-amber-200 p-3.5 rounded-xl text-xs space-y-1.5 text-amber-900">
+        <p class="font-bold flex items-center gap-1">🔒 Proteksi & Keamanan Resep Medis:</p>
+        <p class="text-[11px] leading-relaxed text-amber-800">
+          Demi keamanan pasien dan mencegah penyalahgunaan obat keras, rincian obat & dosis hanya tercantum pada berkas PDF resmi yang dikirimkan langsung ke WhatsApp pemilik terdaftar.
+        </p>
       </div>
 
-      <div class="text-[10px] text-center text-gray-400 pt-3 border-t">
+      <div class="text-[10px] text-center text-gray-400 pt-3 border-t space-y-1">
+        <p class="font-semibold text-gray-500">Status Resep: Non-Iteratur (Tidak Dapat Diulang Tanpa Izin Dokter)</p>
         <p>© 2026 VetConnect Consultation Platform. All rights reserved.</p>
       </div>
     </div>
 
+    <!-- Tampilan Tidak Valid -->
     <div id="content-invalid" class="p-8 text-center space-y-3 hidden">
       <span class="text-4xl">❌</span>
       <h2 class="font-bold text-rose-800 text-sm">Resep Tidak Ditemukan / Tidak Valid</h2>
@@ -100,16 +100,13 @@
 
         document.getElementById('loading').classList.add('hidden');
 
-        if (error || !data || !data.resep_obat) {
+        if (error || !data) {
           tampilkanInvalid();
         } else {
           document.getElementById('v-booking').innerText = data.booking_id;
-          document.getElementById('v-tanggal').innerText = data.resep_tanggal || '-';
+          document.getElementById('v-tanggal').innerText = data.resep_tanggal || new Date(data.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
           document.getElementById('v-pemilik').innerText = data.nama_pemilik;
           document.getElementById('v-hewan').innerText = data.resep_hewan || data.info_hewan;
-          document.getElementById('v-diagnosis').innerText = data.resep_diagnosis || '-';
-          document.getElementById('v-obat').innerText = data.resep_obat;
-          document.getElementById('v-edukasi').innerText = data.resep_edukasi || '-';
 
           document.getElementById('content-valid').classList.remove('hidden');
         }
