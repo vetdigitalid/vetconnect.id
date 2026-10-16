@@ -15,7 +15,7 @@
         <span class="text-xl">🛡️</span>
         <h1 class="text-lg font-bold">VetBook Admin Panel</h1>
       </div>
-      <span id="admin-status" class="text-[9px] bg-emerald-500 text-white px-2.5 py-1 rounded-full font-bold">Live Dashboard</span>
+      <span class="text-[9px] bg-emerald-500 text-white px-2.5 py-1 rounded-full font-bold">Live Dashboard</span>
     </div>
   </header>
 
@@ -26,9 +26,7 @@
           <h2 class="font-bold text-gray-900 text-sm">📋 Riwayat Seluruh Pesanan</h2>
           <p class="text-[11px] text-gray-500">TeleVet, Layanan, & Digital Produk</p>
         </div>
-        <button onclick="muatSemuaPesanan()" class="bg-teal-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-teal-700 active:scale-95 transition-all flex items-center gap-1 shrink-0">
-          🔄 Refresh
-        </button>
+        <button onclick="muatSemuaPesanan()" class="bg-teal-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold">🔄 Refresh</button>
       </div>
 
       <div class="flex gap-1.5 text-[10px] overflow-x-auto pb-1">
@@ -40,35 +38,23 @@
     </div>
 
     <div id="booking-list" class="space-y-3">
-      <div class="bg-white p-6 rounded-2xl text-center text-xs text-gray-400 border border-gray-200 shadow-sm">
-        Memuat data transaksi dari Supabase...
-      </div>
+      <div class="bg-white p-6 rounded-2xl text-center text-xs text-gray-400 border shadow-sm">Memuat data dari Supabase...</div>
     </div>
   </main>
 
   <script>
     const SUPABASE_URL = "https://gobaqeeadobzpscqexax.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvYmFxZWVhZG9ienBzY3FleGF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODY2ODEsImV4cCI6MjEwNTE2MjY4MX0.Usq9ECO3WQ4u7CXei7ylSBkefoMgFCL03qRwROMJs7U";
-
-    let dbSupabase = null;
-    if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
-      dbSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    }
-
+    let dbSupabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
     let rawBookingsData = [];
 
-    window.addEventListener('DOMContentLoaded', () => {
-      muatSemuaPesanan();
-    });
+    window.addEventListener('DOMContentLoaded', () => muatSemuaPesanan());
 
     async function muatSemuaPesanan() {
       if (dbSupabase) {
         try {
-          const { data, error } = await dbSupabase
-            .from('bookings')
-            .select('*')
-            .order('created_at', { ascending: false });
-          if (!error && data) rawBookingsData = data;
+          const { data } = await dbSupabase.from('bookings').select('*').order('created_at', { ascending: false });
+          if (data) rawBookingsData = data;
         } catch (e) {}
       }
       if (rawBookingsData.length === 0) {
@@ -84,42 +70,37 @@
 
     function renderDaftarPesanan(daftarData) {
       const container = document.getElementById('booking-list');
-      if (!daftarData || daftarData.length === 0) {
-        container.innerHTML = `<div class="bg-white p-8 rounded-2xl text-center text-xs text-gray-400 border shadow-sm">Belum ada data pesanan.</div>`;
+      if (!daftarData.length) {
+        container.innerHTML = `<div class="bg-white p-8 rounded-2xl text-center text-xs text-gray-400 border shadow-sm">Belum ada pesanan.</div>`;
         return;
       }
 
       let html = '';
       daftarData.forEach(item => {
-        const isDigital = item.layanan && item.layanan.includes('Digital Produk');
         const isTeleVet = item.layanan && item.layanan.includes('TeleVet');
         const status = item.status || 'Pending';
-
         let statusBadge = status === 'Pending' ? `<span class="bg-amber-100 text-amber-800 text-[10px] px-2.5 py-0.5 rounded-full font-bold">⏳ Pending</span>` :
                           status === 'Aktif' ? `<span class="bg-emerald-100 text-emerald-800 text-[10px] px-2.5 py-0.5 rounded-full font-bold">✅ Aktif</span>` :
                           `<span class="bg-gray-100 text-gray-600 text-[10px] px-2.5 py-0.5 rounded-full font-bold">🏁 Selesai</span>`;
 
-        const tgl = item.tanggal_booking || '-';
         const dokterChatUrl = `https://vetconnect.my.id/index.html?mode=chat&role=vet&name=drh.%20Najib&room=${item.booking_id}`;
         const klienChatUrl = `https://vetconnect.my.id/index.html?mode=chat&role=client&name=${encodeURIComponent(item.nama_pemilik || 'Klien')}&room=${item.booking_id}`;
-
-        const pesanWA = `Halo Kak ${item.nama_pemilik}, pembayaran untuk pesanan *${item.layanan}* sudah kami verifikasi.%0A%0A` +
-                        (isTeleVet ? `Silakan masuk ke Ruang Konsultasi TeleVet melalui link berikut:%0A${encodeURIComponent(klienChatUrl)}` : `Terima kasih telah berbelanja digital produk di VetBook!`);
+        const pesanWA = `Halo Kak ${item.nama_pemilik}, pembayaran *${item.layanan}* sudah diverifikasi.%0A%0A` +
+                        (isTeleVet ? `Silakan masuk konsultasi via link berikut:%0A${encodeURIComponent(klienChatUrl)}` : `Terima kasih!`);
 
         html += `
-          <div class="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm space-y-3">
+          <div class="bg-white p-4 rounded-2xl border shadow-sm space-y-3">
             <div class="flex justify-between items-start">
               <div>
                 <p class="text-[10px] font-mono text-gray-400">ID: ${item.booking_id}</p>
                 <h3 class="font-bold text-gray-900 text-sm mt-0.5">${item.nama_pemilik}</h3>
                 <p class="text-xs text-teal-600 font-semibold">${item.layanan}</p>
               </div>
-              <div class="text-right space-y-1">${statusBadge}</div>
+              <div>${statusBadge}</div>
             </div>
             <div class="bg-gray-50 p-2.5 rounded-xl text-xs text-gray-600 space-y-1 border">
               <p>📱 <b>WhatsApp:</b> ${item.whatsapp}</p>
               <p>🐾 <b>Info:</b> ${item.info_hewan}</p>
-              <p>📅 <b>Tanggal:</b> ${tgl}</p>
             </div>
             <div class="flex flex-wrap gap-2 pt-1 border-t">
               ${isTeleVet ? `<a href="${dokterChatUrl}" target="_blank" class="bg-teal-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold">👨‍⚕️ Masuk Chat Dokter</a>` : ''}
@@ -135,16 +116,7 @@
     async function updateStatusPesanan(bookingId, statusBaru) {
       const isExpiredVal = (statusBaru === 'Selesai');
       if (dbSupabase) {
-        try {
-          await dbSupabase.from('bookings').update({ status: statusBaru, is_expired: isExpiredVal }).eq('booking_id', bookingId);
-        } catch (e) {}
-      }
-      let localData = JSON.parse(localStorage.getItem('vetbook_bookings') || '[]');
-      let target = localData.find(b => b.booking_id === bookingId);
-      if (target) {
-        target.status = statusBaru;
-        target.is_expired = isExpiredVal;
-        localStorage.setItem('vetbook_bookings', JSON.stringify(localData));
+        await dbSupabase.from('bookings').update({ status: statusBaru, is_expired: isExpiredVal }).eq('booking_id', bookingId);
       }
       muatSemuaPesanan();
     }
