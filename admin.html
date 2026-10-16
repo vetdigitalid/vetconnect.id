@@ -15,9 +15,16 @@
   <header class="bg-teal-700 text-white p-4 shadow-md sticky top-0 z-10">
     <div class="max-w-2xl mx-auto flex justify-between items-center">
       <h1 class="text-lg font-bold flex items-center gap-2">🔐 Panel Admin VetBook</h1>
-      <button onclick="keluarAdmin()" class="text-xs bg-rose-600 hover:bg-rose-700 px-3 py-1.5 rounded-lg font-semibold transition-all">
-        Keluar
-      </button>
+      
+      <div class="flex items-center gap-2">
+        <!-- Tombol Pintasan ke Halaman Kalkulator Terpisah -->
+        <a href="kalkulator.html" target="_blank" class="text-xs bg-amber-500 hover:bg-amber-600 text-white font-bold px-3 py-1.5 rounded-lg transition-all shadow-sm flex items-center gap-1">
+          <span>🧮 Kalkulator Dosis</span>
+        </a>
+        <button onclick="keluarAdmin()" class="text-xs bg-rose-600 hover:bg-rose-700 px-3 py-1.5 rounded-lg font-semibold transition-all">
+          Keluar
+        </button>
+      </div>
     </div>
   </header>
 
@@ -51,7 +58,7 @@
 
   </main>
 
-  <!-- Modal Buat Resep Digital -->
+  <!-- Modal Buat Resep Digital Standar -->
   <div id="modal-resep" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 hidden overflow-y-auto">
     <div class="bg-white p-5 rounded-2xl max-w-md w-full space-y-4 my-8">
       <div class="flex justify-between items-center border-b pb-2">
@@ -198,9 +205,6 @@
       let html = '';
       data.forEach(item => {
         const isPending = item.status === 'Pending';
-        const isSelesai = item.status === 'Selesai' || item.is_expired;
-
-        const linkKlien = `https://vetconnect.my.id/index.html?mode=chat&role=client&name=${encodeURIComponent(item.nama_pemilik)}&room=${item.booking_id}`;
         const linkDokter = `https://vetconnect.my.id/index.html?mode=chat&role=vet&name=${encodeURIComponent('drh. Najib')}&room=${item.booking_id}`;
 
         html += `
@@ -306,7 +310,7 @@
 
         if (error) {
           console.error("Gagal simpan ke Supabase:", error);
-          alert("Peringatan: Gagal menyimpan data resep ke database. Pastikan kolom tabel di Supabase sudah dibuat.");
+          alert("Peringatan: Gagal menyimpan data resep ke database.");
         }
       }
 
