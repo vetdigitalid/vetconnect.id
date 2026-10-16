@@ -26,7 +26,7 @@
           <h2 class="font-bold text-gray-900 text-sm">📋 Riwayat Seluruh Pesanan</h2>
           <p class="text-[11px] text-gray-500">TeleVet, Layanan, & Digital Produk</p>
         </div>
-        <button onclick="muatSemuaPesanan()" class="bg-teal-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold">🔄 Refresh</button>
+        <button onclick="muatSemuaPesanan()" class="bg-teal-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold active:scale-95 transition-all">🔄 Refresh</button>
       </div>
 
       <div class="flex gap-1.5 text-[10px] overflow-x-auto pb-1">
@@ -42,11 +42,56 @@
     </div>
   </main>
 
+  <!-- MODAL FORM RESEP DIGITAL & EDUKASI -->
+  <div id="modal-resep" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white p-5 rounded-2xl max-w-sm w-full space-y-3 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-bold text-sm text-teal-800 flex items-center gap-1">📝 Resep Digital & Edukasi TeleVet</h3>
+        <button onclick="tutupModalResep()" class="text-gray-400 hover:text-red-600 font-bold text-sm">✕</button>
+      </div>
+
+      <div class="space-y-2.5 text-xs">
+        <div>
+          <label class="block font-semibold text-gray-600 mb-0.5">Nama Pemilik / No. WA</label>
+          <input type="text" id="resep-pemilik" readonly class="w-full p-2 bg-gray-100 border rounded-lg font-bold text-gray-700">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-gray-600 mb-0.5">Nama Hewan / Jenis / BB</label>
+          <input type="text" id="resep-hewan" placeholder="Contoh: Miko (Kucing / 3.5 kg)" class="w-full p-2 border rounded-lg focus:border-teal-500">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-gray-600 mb-0.5">Diagnosis / Anamnesa Dokter</label>
+          <input type="text" id="resep-diagnosis" placeholder="Contoh: FLUTD / Suspect Urolithiasis" class="w-full p-2 border rounded-lg focus:border-teal-500">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-gray-600 mb-0.5">Daftar Obat, Dosis & Aturan Pakai</label>
+          <textarea id="resep-obat" rows="3" placeholder="Contoh:&#10;1. Meloxicam Syrup: 1x sehari 0.3 ml (sesudah makan) - 3 hari&#10;2. Ciprofloxacin 250mg: 2x sehari 1 kapsul - 5 hari" class="w-full p-2 border rounded-lg focus:border-teal-500 font-mono text-[11px]"></textarea>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-gray-600 mb-0.5">Catatan Edukasi & Anjuran Perawatan</label>
+          <textarea id="resep-edukasi" rows="2" placeholder="Contoh: Ganti pakan ke Urinary/Renal, perbanyak air minum bersih di beberapa sudut rumah." class="w-full p-2 border rounded-lg focus:border-teal-500"></textarea>
+        </div>
+      </div>
+
+      <div class="pt-2 flex gap-2">
+        <button onclick="tutupModalResep()" class="w-1/3 bg-gray-200 text-gray-700 py-2 rounded-xl font-bold text-xs">Batal</button>
+        <button onclick="kirimResepWA()" class="w-2/3 bg-emerald-600 text-white py-2 rounded-xl font-bold text-xs shadow-md hover:bg-emerald-700 active:scale-95 transition-all flex items-center justify-center gap-1">
+          <span>🚀 Kirim Resep via WA</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const SUPABASE_URL = "https://gobaqeeadobzpscqexax.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvYmFxZWVhZG9ienBzY3FleGF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODY2ODEsImV4cCI6MjEwNTE2MjY4MX0.Usq9ECO3WQ4u7CXei7ylSBkefoMgFCL03qRwROMJs7U";
     let dbSupabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
     let rawBookingsData = [];
+    let activeResepBooking = null;
 
     window.addEventListener('DOMContentLoaded', () => muatSemuaPesanan());
 
@@ -103,8 +148,9 @@
               <p>🐾 <b>Info:</b> ${item.info_hewan}</p>
             </div>
             <div class="flex flex-wrap gap-2 pt-1 border-t">
-              ${isTeleVet ? `<a href="${dokterChatUrl}" target="_blank" class="bg-teal-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold">👨‍⚕️ Masuk Chat Dokter</a>` : ''}
-              <a href="https://wa.me/${item.whatsapp}?text=${pesanWA}" target="_blank" onclick="updateStatusPesanan('${item.booking_id}', 'Aktif')" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold">📲 Kirim WA</a>
+              ${isTeleVet ? `<a href="${dokterChatUrl}" target="_blank" class="bg-teal-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm">👨‍⚕️ Masuk Chat Dokter</a>` : ''}
+              <a href="https://wa.me/${item.whatsapp}?text=${pesanWA}" target="_blank" onclick="updateStatusPesanan('${item.booking_id}', 'Aktif')" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm">📲 Kirim WA</a>
+              ${isTeleVet ? `<button onclick="bukaModalResep('${item.booking_id}')" class="bg-purple-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm">📝 Buat & Kirim Resep</button>` : ''}
               ${status !== 'Selesai' ? `<button onclick="updateStatusPesanan('${item.booking_id}', 'Selesai')" class="bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold">Tandai Selesai</button>` : ''}
             </div>
           </div>
@@ -119,6 +165,66 @@
         await dbSupabase.from('bookings').update({ status: statusBaru, is_expired: isExpiredVal }).eq('booking_id', bookingId);
       }
       muatSemuaPesanan();
+    }
+
+    // LOGIKA MODAL RESEP DIGITAL
+    function bukaModalResep(bookingId) {
+      const item = rawBookingsData.find(b => b.booking_id === bookingId);
+      if (!item) return;
+
+      activeResepBooking = item;
+      document.getElementById('resep-pemilik').value = `${item.nama_pemilik} (${item.whatsapp})`;
+      document.getElementById('resep-hewan').value = item.info_hewan || '';
+      document.getElementById('resep-diagnosis').value = '';
+      document.getElementById('resep-obat').value = '';
+      document.getElementById('resep-edukasi').value = '';
+      document.getElementById('modal-resep').classList.remove('hidden');
+    }
+
+    function tutupModalResep() {
+      activeResepBooking = null;
+      document.getElementById('modal-resep').classList.add('hidden');
+    }
+
+    async function kirimResepWA() {
+      if (!activeResepBooking) return;
+
+      const hewan = document.getElementById('resep-hewan').value.trim();
+      const diagnosis = document.getElementById('resep-diagnosis').value.trim();
+      const obat = document.getElementById('resep-obat').value.trim();
+      const edukasi = document.getElementById('resep-edukasi').value.trim();
+
+      if (!diagnosis || !obat) {
+        alert('Mohon isi Diagnosis dan Daftar Obat terlebih dahulu!');
+        return;
+      }
+
+      const tglFormatted = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+
+      // Susun Format Pesan WhatsApp Resep Digital
+      const pesanResep = `🐾 *RESEP DIGITAL & CATATAN EDUKASI TELEVET* 🐾\n` +
+                         `--------------------------------------------------\n` +
+                         `👨‍⚕️ *Dokter Hewan:* drh. Nur Rohman Najib\n` +
+                         `📅 *Tanggal:* ${tglFormatted}\n` +
+                         `🆔 *ID Konsultasi:* ${activeResepBooking.booking_id}\n` +
+                         `👤 *Pemilik:* ${activeResepBooking.nama_pemilik}\n` +
+                         `🐾 *Pasien:* ${hewan || activeResepBooking.info_hewan}\n\n` +
+                         `🩺 *DIAGNOSIS / ANAMNESA:*\n` +
+                         `${diagnosis}\n\n` +
+                         `💊 *RESEP OBAT & ATURAN PAKAI:*\n` +
+                         `${obat}\n\n` +
+                         `📋 *CATATAN EDUKASI & ANJURAN PERAWATAN:*\n` +
+                         `${edukasi || '-'}\n\n` +
+                         `--------------------------------------------------\n` +
+                         `_Terima kasih telah berkonsultasi di TeleVet. Semoga anabul lekas sehat kembali!_ 🙏✨`;
+
+      // Update status ke Selesai di Supabase
+      await updateStatusPesanan(activeResepBooking.booking_id, 'Selesai');
+
+      // Buka WA Klien
+      const waUrl = `https://wa.me/${activeResepBooking.whatsapp}?text=${encodeURIComponent(pesanResep)}`;
+      tutupModalResep();
+      window.open(waUrl, '_blank');
     }
   </script>
 </body>
