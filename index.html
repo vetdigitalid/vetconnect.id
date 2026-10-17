@@ -35,13 +35,18 @@
     <section class="space-y-3">
       <h3 class="text-md font-bold text-gray-800 flex items-center gap-1">🩺 Pilih Layanan</h3>
 
+      <!-- TeleVet dengan Harga Promo Coret -->
       <div class="bg-white p-4 rounded-xl border border-gray-200 flex justify-between items-center shadow-sm">
         <div>
           <h4 class="font-bold text-gray-900">TeleVet (Pet n Poultry)</h4>
           <p class="text-xs text-gray-500">Konsultasi online via chat & video call</p>
-          <p class="text-sm font-semibold text-teal-600 mt-1">Rp 50.000</p>
+          <div class="flex items-center gap-2 mt-1">
+            <span class="text-xs text-gray-400 line-through">Rp 50.000</span>
+            <span class="text-sm font-bold text-teal-600">Rp 35.000</span>
+            <span class="text-[9px] font-bold bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded">PROMO</span>
+          </div>
         </div>
-        <button type="button" onclick="pilihLayanan('TeleVet (Pet n Poultry)', 50000)" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-teal-700 active:scale-95 transition-all shrink-0">
+        <button type="button" onclick="pilihLayanan('TeleVet (Pet n Poultry)', 35000)" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-teal-700 active:scale-95 transition-all shrink-0">
           Pilih
         </button>
       </div>
@@ -282,7 +287,7 @@
     let selectedMedia = null;
     let countdownInterval = null;
     let pollInterval = null;
-    let vcTimerInterval = null; // Timer khusus Video Call 3 Menit
+    let vcTimerInterval = null;
     let userRole = 'client';
     let currentRoomId = '';
     let currentUserName = '';
@@ -551,15 +556,13 @@
       container.scrollTop = container.scrollHeight;
     }
 
-    // Video Call In-App dengan Batasan Waktu 3 Menit (180 Detik)
     function bukaVideoCall() {
       const uniqueRoomName = `VetBook-Consultation-DrNajib-${currentRoomId}`;
       const vcRoomUrl = `https://meet.jit.si/${uniqueRoomName}`;
       document.getElementById('vc-iframe').src = vcRoomUrl;
       document.getElementById('modal-vc-inapp').classList.remove('hidden');
 
-      // Jalankan Timer 3 Menit untuk Video Call
-      let timeLeftVC = 180; // 3 Menit dalam detik
+      let timeLeftVC = 180;
       const vcDisplay = document.getElementById('vc-timer-display');
       vcDisplay.innerText = "⏱️ 03:00";
 
