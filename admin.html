@@ -3,745 +3,368 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VetBook - Booking & Digital Shop</title>
+  <title>VetBook - Panel Admin Verifikasi</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans pb-10">
+<body class="bg-gray-100 text-gray-800 font-sans pb-10">
 
-  <!-- Header / Navbar -->
-  <header class="bg-teal-600 text-white p-4 shadow-md sticky top-0 z-10">
-    <div class="max-w-md mx-auto flex justify-between items-center">
-      <h1 class="text-xl font-bold flex items-center gap-2">🐾 VetBook</h1>
+  <!-- Header Admin -->
+  <header class="bg-teal-700 text-white p-4 shadow-md sticky top-0 z-10">
+    <div class="max-w-2xl mx-auto flex justify-between items-center">
+      <h1 class="text-lg font-bold flex items-center gap-2">🔐 Panel Admin VetBook</h1>
+      
       <div class="flex items-center gap-2">
-        <span id="db-status" class="text-[9px] bg-amber-500 text-white px-2 py-0.5 rounded-full">Connecting...</span>
-        <span id="page-tag" class="text-xs bg-teal-800 px-2 py-1 rounded-full">v4.8 Fix</span>
+        <!-- Tombol Pintasan ke Halaman Kalkulator Terpisah -->
+        <a href="kalkulator.html" target="_blank" class="text-xs bg-amber-500 hover:bg-amber-600 text-white font-bold px-3 py-1.5 rounded-lg transition-all shadow-sm flex items-center gap-1">
+          <span>🧮 Kalkulator Dosis</span>
+        </a>
+        <button onclick="keluarAdmin()" class="text-xs bg-rose-600 hover:bg-rose-700 px-3 py-1.5 rounded-lg font-semibold transition-all">
+          Keluar
+        </button>
       </div>
     </div>
   </header>
 
-  <!-- TAMPILAN 1: UTAMA / BOOKING (Default) -->
-  <main id="view-main" class="max-w-md mx-auto p-4 space-y-6">
+  <main class="max-w-2xl mx-auto p-4 space-y-6">
 
-    <!-- Profil Dokter -->
-    <section class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 text-center">
-      <img src="file_00000000aac8820798f630c2a49481f6.png" alt="drh. Najib" class="w-24 h-24 rounded-full mx-auto object-cover border-2 border-teal-500 shadow-md mb-3" onerror="this.src='https://via.placeholder.com/150?text=drh.+Najib'">
-      <h2 class="text-xl font-bold text-gray-900">drh. Najib</h2>
-      <p class="text-sm text-teal-600 font-medium">Vet Consultant</p>
-      <p class="text-xs text-gray-500 mt-1">📍 Malang, Indonesia</p>
-    </section>
-
-    <!-- Daftar Layanan Jasa -->
-    <section class="space-y-3">
-      <h3 class="text-md font-bold text-gray-800 flex items-center gap-1">🩺 Pilih Layanan</h3>
-
-      <!-- TeleVet dengan Harga Promo Coret -->
-      <div class="bg-white p-4 rounded-xl border border-gray-200 flex justify-between items-center shadow-sm">
-        <div>
-          <h4 class="font-bold text-gray-900">TeleVet (Pet n Poultry)</h4>
-          <p class="text-xs text-gray-500">Konsultasi online via chat & video call</p>
-          <div class="flex items-center gap-2 mt-1">
-            <span class="text-xs text-gray-400 line-through">Rp 50.000</span>
-            <span class="text-sm font-bold text-teal-600">Rp 35.000</span>
-            <span class="text-[9px] font-bold bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded">PROMO</span>
-          </div>
-        </div>
-        <button type="button" onclick="pilihLayanan('TeleVet (Pet n Poultry)', 35000)" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-teal-700 active:scale-95 transition-all shrink-0">
-          Pilih
-        </button>
+    <!-- Statistik Ringkas -->
+    <section class="grid grid-cols-2 gap-3">
+      <div class="bg-white p-4 rounded-xl border shadow-sm text-center">
+        <p class="text-xs text-gray-500 font-medium">Total Pesanan</p>
+        <p id="stat-total" class="text-xl font-bold text-teal-700">0</p>
       </div>
-
-      <div class="bg-white p-4 rounded-xl border border-gray-200 flex justify-between items-center shadow-sm">
-        <div>
-          <h4 class="font-bold text-gray-900">Vaksinasi Anabul</h4>
-          <p class="text-xs text-gray-500">Layanan kunjungan (no include)</p>
-          <p class="text-sm font-semibold text-teal-600 mt-1">Rp 250.000</p>
-        </div>
-        <button type="button" onclick="pilihLayanan('Vaksinasi Anabul', 250000)" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-teal-700 active:scale-95 transition-all shrink-0">
-          Pilih
-        </button>
+      <div class="bg-white p-4 rounded-xl border shadow-sm text-center">
+        <p class="text-xs text-gray-500 font-medium">Perlu Verifikasi</p>
+        <p id="stat-pending" class="text-xl font-bold text-amber-600">0</p>
       </div>
     </section>
 
-    <!-- Digital Produk -->
-    <section class="space-y-3">
-      <h3 class="text-md font-bold text-gray-800 flex items-center gap-1">📚 Digital Produk</h3>
-
-      <!-- Spreadsheet -->
-      <div class="bg-white p-4 rounded-xl border border-teal-100 flex justify-between items-center shadow-sm">
-        <div class="pr-2">
-          <span class="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md">Spreadsheet</span>
-          <h4 class="font-bold text-gray-900 mt-1 text-sm">Kalkulator Formulasi Pakan Mandiri</h4>
-          <p class="text-sm font-semibold text-teal-600 mt-1">Rp 55.000</p>
-        </div>
-        <button type="button" onclick="pilihLayanan('Digital Produk: Kalkulator Formulasi Pakan Mandiri', 55000)" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-teal-700 active:scale-95 transition-all shrink-0">
-          Beli
+    <!-- Daftar Pesanan -->
+    <section class="bg-white p-5 rounded-2xl shadow-sm border space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h2 class="font-bold text-gray-800 text-sm">📋 Daftar Pemesanan Konsultasi & Produk</h2>
+        <button onclick="muatSemuaPesanan()" class="text-xs bg-teal-50 text-teal-700 border border-teal-200 px-2.5 py-1 rounded-lg font-semibold hover:bg-teal-100">
+          🔄 Refresh
         </button>
       </div>
 
-      <!-- E-Book 1 -->
-      <div class="bg-white p-4 rounded-xl border border-teal-100 flex justify-between items-center shadow-sm">
-        <div class="pr-2">
-          <span class="text-[10px] font-bold uppercase tracking-wider bg-teal-100 text-teal-800 px-2 py-0.5 rounded-md">E-Book</span>
-          <h4 class="font-bold text-gray-900 mt-1 text-sm">Panduan Pemeliharaan Unggas Yang Efisien & Minim Bau</h4>
-          <p class="text-sm font-semibold text-teal-600 mt-1">Rp 99.000</p>
-        </div>
-        <button type="button" onclick="pilihLayanan('Digital Produk: Panduan Unggas Minim Bau', 99000)" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-teal-700 active:scale-95 transition-all shrink-0">
-          Beli
-        </button>
-      </div>
-
-      <!-- E-Book 2 -->
-      <div class="bg-white p-4 rounded-xl border border-teal-100 flex justify-between items-center shadow-sm">
-        <div class="pr-2">
-          <span class="text-[10px] font-bold uppercase tracking-wider bg-teal-100 text-teal-800 px-2 py-0.5 rounded-md">E-Book</span>
-          <h4 class="font-bold text-gray-900 mt-1 text-sm">Cegah Sebelum Mahal - Resep Sehat Anabul Hemat ala Dokter Hewan</h4>
-          <p class="text-sm font-semibold text-teal-600 mt-1">Rp 69.000</p>
-        </div>
-        <button type="button" onclick="pilihLayanan('Digital Produk: Cegah Sebelum Mahal', 69000)" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-teal-700 active:scale-95 transition-all shrink-0">
-          Beli
-        </button>
-      </div>
-
-      <!-- E-Book 3 -->
-      <div class="bg-white p-4 rounded-xl border border-teal-100 flex justify-between items-center shadow-sm">
-        <div class="pr-2">
-          <span class="text-[10px] font-bold uppercase tracking-wider bg-purple-100 text-purple-800 px-2 py-0.5 rounded-md">E-Book Vet</span>
-          <h4 class="font-bold text-gray-900 mt-1 text-sm">Strategi Vet Dapatkan Cash Flow Legal Tanpa Harus Buka Klinik Sendiri</h4>
-          <p class="text-sm font-semibold text-teal-600 mt-1">Rp 119.000</p>
-        </div>
-        <button type="button" onclick="pilihLayanan('Digital Produk: Strategi Vet Cash Flow Legal', 119000)" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-teal-700 active:scale-95 transition-all shrink-0">
-          Beli
-        </button>
-      </div>
-
-      <!-- E-Book 4 -->
-      <div class="bg-white p-4 rounded-xl border border-teal-100 flex justify-between items-center shadow-sm">
-        <div class="pr-2">
-          <span class="text-[10px] font-bold uppercase tracking-wider bg-rose-100 text-rose-800 px-2 py-0.5 rounded-md">E-Book P3K</span>
-          <h4 class="font-bold text-gray-900 mt-1 text-sm">P3K Anabul - Panduan Praktis & Langkah Cepat Penanganan Darurat Anabul di Rumah</h4>
-          <p class="text-sm font-semibold text-teal-600 mt-1">Rp 60.000</p>
-        </div>
-        <button type="button" onclick="pilihLayanan('Digital Produk: P3K Anabul', 60000)" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-teal-700 active:scale-95 transition-all shrink-0">
-          Beli
-        </button>
+      <div id="list-pesanan" class="space-y-3">
+        <p class="text-xs text-gray-400 text-center py-6">Memuat data pesanan...</p>
       </div>
     </section>
 
-    <!-- Form Booking -->
-    <section id="section-booking" class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-4 hidden">
-      <h3 class="text-md font-bold text-teal-700 border-b pb-2">📅 Formulir Pemesanan</h3>
-
-      <div>
-        <label class="block text-xs font-semibold text-gray-600 mb-1">Item / Layanan Terpilih</label>
-        <input type="text" id="selected-service" readonly class="w-full p-2.5 bg-gray-50 border rounded-lg text-sm font-bold text-teal-800">
-      </div>
-
-      <div>
-        <label class="block text-xs font-semibold text-gray-600 mb-1">Tanggal Konsultasi / Pemesanan</label>
-        <input type="date" id="booking-date" class="w-full p-2.5 border rounded-lg text-sm">
-      </div>
-
-      <div>
-        <label class="block text-xs font-semibold text-gray-600 mb-1">Nama Pembeli / Pemilik Hewan</label>
-        <input type="text" id="owner-name" placeholder="Contoh: Budi Santoso" class="w-full p-2.5 border rounded-lg text-sm">
-      </div>
-
-      <div>
-        <label class="block text-xs font-semibold text-gray-600 mb-1">Nomor WhatsApp Aktif</label>
-        <input type="tel" id="owner-whatsapp" placeholder="Contoh: 081234567890" class="w-full p-2.5 border rounded-lg text-sm">
-      </div>
-
-      <div>
-        <label class="block text-xs font-semibold text-gray-600 mb-1">Nama & Jenis Hewan / Keluhan Singkat</label>
-        <input type="text" id="pet-info" placeholder="Contoh: Miko (Kucing Persia) / Lemes" class="w-full p-2.5 border rounded-lg text-sm">
-      </div>
-
-      <button type="button" onclick="lanjutKePembayaran()" class="w-full bg-teal-600 text-white py-3 rounded-xl font-bold shadow-lg text-sm hover:bg-teal-700 active:scale-95 transition-all flex items-center justify-center gap-2">
-        <span>💳 Lanjut ke Instruksi Pembayaran</span>
-      </button>
-    </section>
-
-    <!-- Footer -->
-    <footer class="text-center py-6 text-xs text-gray-400">
-      <p>© 2026 VetBook. All rights reserved.</p>
-      <button type="button" onclick="aksesAdmin()" class="text-gray-400 hover:text-teal-600 underline text-[11px] mt-2 inline-block">
-        🔐 Panel Admin Verifikasi
-      </button>
-    </footer>
   </main>
 
-
-  <!-- TAMPILAN 1.5: HALAMAN INSTRUKSI PEMBAYARAN TRANSFER KODE UNIK -->
-  <main id="view-payment" class="max-w-md mx-auto p-4 space-y-4 hidden">
-    <div class="bg-white p-5 rounded-2xl shadow-sm border space-y-4">
-      <div class="border-b pb-2 flex justify-between items-center">
-        <h3 class="font-bold text-teal-800 text-sm">💳 Instruksi Transfer Bank</h3>
-        <span id="pay-booking-id" class="text-xs font-mono bg-teal-50 text-teal-700 px-2 py-0.5 rounded"></span>
+  <!-- Modal Buat Resep Digital Standar -->
+  <div id="modal-resep" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 hidden overflow-y-auto">
+    <div class="bg-white p-5 rounded-2xl max-w-md w-full space-y-4 my-8">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-bold text-sm text-teal-800">📝 Buat Resep Digital & Edukasi</h3>
+        <button onclick="tutupModalResep()" class="text-gray-400 hover:text-gray-600 font-bold">✕</button>
       </div>
 
-      <div class="bg-teal-50 p-4 rounded-xl border border-teal-100 text-center space-y-1">
-        <p class="text-xs text-gray-600">Total Nominal Pembayaran (Termasuk Kode Unik):</p>
-        <p id="pay-total-amount" class="text-2xl font-black text-teal-800">Rp 0</p>
-        <p class="text-[10px] text-teal-600 font-medium">*Harap transfer persis hingga 3 digit terakhir</p>
-      </div>
-
-      <div class="bg-gray-50 p-3.5 rounded-xl border text-xs space-y-2">
-        <p class="font-bold text-gray-800">Silakan transfer melalui rekening resmi berikut:</p>
-        <div class="bg-white p-3 rounded-lg border font-mono text-gray-800 space-y-1">
-          <p class="font-bold text-teal-700 text-sm">Bank BCA: 0300664695</p>
-          <p class="text-gray-600">Atas Nama: Nur Rohman Najib</p>
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-gray-600 mb-1">Nama Hewan / Pasien</label>
+          <input type="text" id="resep-hewan" class="w-full p-2 border rounded-lg">
+        </div>
+        <div>
+          <label class="block font-semibold text-gray-600 mb-1">Diagnosis Dokter</label>
+          <input type="text" id="resep-diagnosis" placeholder="Contoh: Suspek FLUTD / Dehidrasi Ringan" class="w-full p-2 border rounded-lg">
+        </div>
+        <div>
+          <label class="block font-semibold text-gray-600 mb-1">Daftar Obat & Dosis</label>
+          <textarea id="resep-obat" rows="3" placeholder="Contoh:&#10;1. Cefadroxil syr 2x0.5 ml (7 hari)&#10;2. Urilysin 2x1 kapsul" class="w-full p-2 border rounded-lg font-mono text-[11px]"></textarea>
+        </div>
+        <div>
+          <label class="block font-semibold text-gray-600 mb-1">Catatan Edukasi & Perawatan di Rumah</label>
+          <textarea id="resep-edukasi" rows="3" placeholder="Contoh: Jagalah asupan air minum, bersihkan litter box secara rutin." class="w-full p-2 border rounded-lg"></textarea>
         </div>
       </div>
 
-      <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl text-[11px] text-amber-900 leading-relaxed">
-        <p class="font-bold mb-0.5">⚠️ Perhatian:</p>
-        Setelah Anda melakukan transfer sesuai nominal di atas, klik tombol di bawah untuk mengirim konfirmasi peninjauan pembayaran ke dokter.
-      </div>
-
-      <button type="button" id="btn-konfirmasi-transfer" onclick="konfirmasiSudahTransfer(event)" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-emerald-700 active:scale-95 transition-all shadow-md">
-        ✅ Saya Sudah Transfer, Kirim Konfirmasi
-      </button>
-      
-      <button type="button" onclick="kembaliKeBooking()" class="w-full text-xs text-gray-500 underline text-center pt-1">
-        ⬅️ Kembali ke Data Pesanan
-      </button>
-    </div>
-  </main>
-
-
-  <!-- TAMPILAN 1.8: HALAMAN MENUNGGU VERIFIKASI (WAITING SCREEN) -->
-  <main id="view-waiting" class="max-w-md mx-auto p-6 space-y-6 hidden text-center">
-    <div class="bg-white p-8 rounded-2xl shadow-sm border space-y-4">
-      <div class="text-5xl animate-bounce">⏳</div>
-      <h3 class="font-bold text-teal-800 text-base">Mohon Ditunggu...</h3>
-      <p class="text-xs text-gray-600 leading-relaxed">
-        Pembayaran Anda sedang dalam proses peninjauan dan verifikasi oleh <span class="font-bold text-teal-700">drh. Najib</span>.
-      </p>
-      <div class="bg-teal-50 border border-teal-200 p-3 rounded-xl text-[11px] text-teal-800">
-        Halaman ini akan otomatis masuk ke ruang konsultasi begitu pembayaran Anda dikonfirmasi lunas oleh dokter.
-      </div>
-      <div class="pt-2">
-        <span class="inline-block w-4 h-4 border-2 border-teal-600 border-t-transparent rounded-full animate-spin"></span>
-        <span class="text-[11px] text-gray-400 ml-2">Menghubungkan ke server...</span>
+      <div class="flex gap-2 pt-2">
+        <button onclick="tutupModalResep()" class="w-1/2 bg-gray-200 text-gray-700 py-2 rounded-xl text-xs font-bold">Batal</button>
+        <button onclick="generateDanKirimPDF()" class="w-1/2 bg-teal-600 text-white py-2 rounded-xl text-xs font-bold hover:bg-teal-700">
+          📄 Terbitkan PDF & WA
+        </button>
       </div>
     </div>
-  </main>
+  </div>
 
-
-  <!-- TAMPILAN 2: RUANG PERCAKAPAN TELEVET -->
-  <main id="view-chat" class="max-w-md mx-auto p-4 space-y-4 hidden">
-    
-    <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex justify-between items-center">
-      <div class="flex items-center gap-3">
-        <img src="file_00000000aac8820798f630c2a49481f6.png" class="w-10 h-10 rounded-full object-cover border border-teal-500" onerror="this.src='https://via.placeholder.com/150?text=drh.+Najib'">
-        <div>
-          <h2 class="font-bold text-sm text-gray-900">drh. Najib</h2>
-          <span class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">Online</span>
-        </div>
+  <!-- Template PDF Tersembunyi (Untuk Render Ke PDF) -->
+  <div id="pdf-template" class="hidden p-8 bg-white text-gray-900 font-sans max-w-xl mx-auto border border-gray-300 rounded-lg">
+    <div class="border-b-2 border-teal-600 pb-4 mb-4 flex justify-between items-center">
+      <div>
+        <h1 class="text-xl font-bold text-teal-800">drh. Nur Rohman Najib</h1>
+        <p class="text-xs text-teal-600 font-medium">Dokter Hewan / TeleVet Consultant</p>
+        <p class="text-[10px] text-gray-500">📍 Malang, Jawa Timur | WA: 0812-1566-7746</p>
       </div>
-
       <div class="text-right">
-        <div id="client-timer-box" class="text-xs font-bold text-rose-600 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-lg">
-          ⏱️ Sisa: <span id="timer-display">20:00</span>
-        </div>
-        <div id="vet-timer-box" class="text-xs font-bold text-teal-700 bg-teal-50 border border-teal-200 px-2.5 py-1 rounded-lg hidden">
-          ♾️ Akses Dokter (Unlimited)
-        </div>
-        <button onclick="akhiriSesi()" class="text-[10px] text-red-600 font-bold underline mt-1 block">Akhiri Sesi</button>
+        <span class="text-xs font-bold bg-teal-100 text-teal-800 px-2 py-1 rounded">RESEP DIGITAL</span>
       </div>
     </div>
 
-    <div class="flex justify-between items-center bg-teal-900 text-white p-3 rounded-xl shadow-md">
-      <div class="text-xs">
-        <p class="font-bold">📹 Fitur Video Call Live TeleVet</p>
-        <p class="text-[10px] text-teal-200">Terhubung langsung dengan dokter (Maks. 3 Menit)</p>
+    <div class="grid grid-cols-2 text-xs mb-4 gap-2 bg-teal-50 p-3 rounded-lg border border-teal-100">
+      <div>
+        <p><strong>No. Booking:</strong> <span id="pdf-booking-id"></span></p>
+        <p><strong>Tanggal:</strong> <span id="pdf-tanggal"></span></p>
       </div>
-      <button onclick="bukaVideoCall()" class="bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-lg font-bold hover:bg-emerald-600 active:scale-95 transition-all flex items-center gap-1">
-        <span>📞 Mulai VC</span>
-      </button>
-    </div>
-
-    <!-- Area Percakapan Pesan -->
-    <div id="chat-messages" class="bg-stone-50 border border-gray-200 rounded-2xl p-4 h-[380px] overflow-y-auto space-y-3 text-xs shadow-inner">
-      <div class="bg-teal-100 text-teal-900 p-3 rounded-2xl rounded-tl-none max-w-[85%] shadow-sm">
-        <p class="font-bold mb-1">drh. Najib</p>
-        <p>Halo! Selamat datang di Ruang Konsultasi TeleVet. Silakan jelaskan kondisi hewan Anda secara rinci seperti Berat Badan, Umur, Keluhan, atau lampirkan foto/video jika ada.</p>
-        <span class="text-[9px] text-teal-700 block mt-1 text-right">Sistem</span>
+      <div>
+        <p><strong>Pemilik:</strong> <span id="pdf-pemilik"></span></p>
+        <p><strong>Pasien Hewan:</strong> <span id="pdf-hewan"></span></p>
       </div>
     </div>
 
-    <!-- Input Pesan & Media Upload -->
-    <div id="chat-input-area" class="bg-white p-3 rounded-2xl border border-gray-200 shadow-sm space-y-2">
-      <div id="media-preview" class="hidden relative inline-block">
-        <img id="img-preview" src="" class="w-16 h-16 object-cover rounded-lg border border-teal-500">
-        <button onclick="batalMedia()" class="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">×</button>
+    <div class="space-y-4 text-xs">
+      <div>
+        <h3 class="font-bold text-teal-800 border-b pb-1">🩺 DIAGNOSIS / KELUHAN</h3>
+        <p id="pdf-diagnosis" class="mt-1 text-gray-700"></p>
       </div>
 
-      <div class="flex items-center gap-2">
-        <label for="media-input" class="bg-gray-100 p-2.5 rounded-xl cursor-pointer hover:bg-gray-200 transition-all text-gray-600 text-base">
-          📎
-        </label>
-        <input type="file" id="media-input" accept="image/*,video/*" class="hidden" onchange="previewFile(event)">
-        
-        <input type="text" id="input-pesan" placeholder="Tulis pesan konsultasi..." class="w-full p-2.5 bg-gray-50 border rounded-xl text-xs focus:outline-none focus:border-teal-500" onkeypress="handleKeyPress(event)">
-        
-        <button onclick="kirimPesan()" class="bg-teal-600 text-white p-2.5 rounded-xl hover:bg-teal-700 active:scale-95 transition-all text-xs font-bold">
-          🚀
-        </button>
+      <div>
+        <h3 class="font-bold text-teal-800 border-b pb-1">💊 R/ DAFTAR OBAT & DOSIS</h3>
+        <p id="pdf-obat" class="mt-1 font-mono text-gray-800 whitespace-pre-line bg-gray-50 p-2.5 rounded border border-gray-200"></p>
+      </div>
+
+      <div>
+        <h3 class="font-bold text-teal-800 border-b pb-1">📋 EDUKASI & PERAWATAN</h3>
+        <p id="pdf-edukasi" class="mt-1 text-gray-700 whitespace-pre-line"></p>
       </div>
     </div>
 
-    <!-- Modal Expired -->
-    <div id="modal-expired" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 hidden">
-      <div class="bg-white p-6 rounded-2xl max-w-xs text-center space-y-3">
-        <div class="text-4xl">⏱️</div>
-        <h3 class="font-bold text-lg text-gray-900">Sesi Konsultasi Selesai</h3>
-        <p class="text-xs text-gray-600">Sesi konsultasi ini telah selesai ditutup oleh admin atau masa aktifnya habis. Link tidak dapat digunakan lagi.</p>
-        <button onclick="keluarKeHome()" class="w-full bg-teal-600 text-white py-2.5 rounded-xl text-xs font-bold">
-          Kembali ke Halaman Utama
-        </button>
+    <div class="mt-8 pt-4 border-t flex justify-between items-center text-[10px] text-gray-500">
+      <div>
+        <p class="font-bold text-gray-700">Verifikasi Resmi Keaslian Resep:</p>
+        <div id="qrcode-pdf" class="mt-1"></div>
+      </div>
+      <div class="text-center">
+        <p class="mb-10">Dokter Hewan Pemeriksa,</p>
+        <p class="font-bold text-gray-800 underline">drh. Nur Rohman Najib</p>
       </div>
     </div>
+  </div>
 
-    <!-- Modal Live Video Call In-App dengan Batasan 3 Menit -->
-    <div id="modal-vc-inapp" class="fixed inset-0 bg-black/90 flex flex-col justify-between p-3 z-50 hidden">
-      <div class="flex justify-between items-center text-white text-xs px-2 pt-2">
-        <span class="font-bold flex items-center gap-1">📹 Video Call Live TeleVet</span>
-        <div class="flex items-center gap-2">
-          <span id="vc-timer-display" class="bg-red-600 text-white px-2.5 py-1 rounded-lg font-bold text-xs animate-pulse">⏱️ 03:00</span>
-          <button onclick="tutupVideoCall()" class="bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold">❌ Tutup</button>
-        </div>
-      </div>
-      <div class="relative flex-1 bg-gray-900 my-3 rounded-2xl overflow-hidden border border-gray-700">
-        <iframe id="vc-iframe" src="" allow="camera; microphone; display-capture; autoplay" class="w-full h-full border-0"></iframe>
-      </div>
-    </div>
-
-  </main>
-
-  <!-- Script Logika Aplikasi -->
+  <!-- Script Logika Admin -->
   <script>
     const SUPABASE_URL = "https://gobaqeeadobzpscqexax.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvYmFxZWVhZG9ienBzY3FleGF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODY2ODEsImV4cCI6MjEwNTE2MjY4MX0.Usq9ECO3WQ4u7CXei7ylSBkefoMgFCL03qRwROMJs7U";
     
-    // ⚠️ PASTIKAN KEDUA VARIABEL INI TERISI DENGAN BENAR DI DALAM TANDA PETIK!
-    const TELEGRAM_BOT_TOKEN = "MASUKKAN_TOKEN_BOT_DISINI"; 
-    const TELEGRAM_CHAT_ID = "MASUKKAN_CHAT_ID_DISINI";
-
     let dbSupabase = null;
     if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
       dbSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     }
 
-    let layananAktif = '';
-    let hargaLayananAktif = 0;
-    let currentBookingId = '';
-    let currentOwnerName = '';
-    let currentFinalPrice = 0;
-    let selectedMedia = null;
-    let countdownInterval = null;
-    let pollInterval = null;
-    let checkStatusInterval = null;
-    let vcTimerInterval = null;
-    let userRole = 'client';
-    let currentRoomId = '';
-    let currentUserName = '';
+    let listBookingData = [];
+    let activeResepBooking = null;
 
     window.addEventListener('DOMContentLoaded', async () => {
       const urlParams = new URLSearchParams(window.location.search);
-      let mode = urlParams.get('mode');
-      let role = urlParams.get('role');
-      let name = urlParams.get('name');
-      let room = urlParams.get('room');
+      const action = urlParams.get('action');
+      const room = urlParams.get('room');
 
-      if (mode === 'chat' && room) {
-        sessionStorage.setItem('vet_mode', mode);
-        sessionStorage.setItem('vet_role', role);
-        sessionStorage.setItem('vet_name', name);
-        sessionStorage.setItem('vet_room', room);
-      } else {
-        mode = sessionStorage.getItem('vet_mode');
-        role = sessionStorage.getItem('vet_role');
-        name = sessionStorage.getItem('vet_name');
-        room = sessionStorage.getItem('vet_room');
-      }
-
-      if (dbSupabase) {
+      // TANGKAP KLIK TAUTAN VERIFIKASI DARI TELEGRAM DOKTER
+      if (action === 'verify' && room && dbSupabase) {
         try {
-          const { data, error } = await dbSupabase.from('messages').select('id').limit(1);
-          const badge = document.getElementById('db-status');
-          if (!error) {
-            badge.innerText = "Online";
-            badge.className = "text-[9px] bg-emerald-500 text-white px-2 py-0.5 rounded-full";
-          } else {
-            badge.innerText = "DB Error";
-            badge.className = "text-[9px] bg-rose-500 text-white px-2 py-0.5 rounded-full";
-          }
+          await dbSupabase.from('bookings').update({ status: 'Terverifikasi' }).eq('booking_id', room);
+          // Langsung alihkan dokter masuk ke Ruang Chat Konsultasi
+          window.location.href = `index.html?mode=chat&role=vet&name=${encodeURIComponent('drh. Najib')}&room=${room}`;
+          return;
         } catch (e) {
-          document.getElementById('db-status').innerText = "Offline";
+          console.error("Gagal autoverifikasi via Telegram:", e);
         }
       }
 
-      if (mode === 'chat' && room) {
-        currentRoomId = room;
-        userRole = role || 'client';
-        currentUserName = name ? decodeURIComponent(name) : 'Klien';
-
-        if (dbSupabase) {
-          try {
-            const { data } = await dbSupabase.from('bookings').select('status, is_expired').eq('booking_id', room).single();
-            if (data && (data.is_expired || data.status === 'Selesai')) {
-              document.getElementById('view-main').classList.add('hidden');
-              document.getElementById('view-chat').classList.remove('hidden');
-              document.getElementById('modal-expired').classList.remove('hidden');
-              return;
-            }
-          } catch (e) {}
-        }
-
-        document.getElementById('view-main').classList.add('hidden');
-        document.getElementById('view-waiting').classList.add('hidden');
-        document.getElementById('view-chat').classList.remove('hidden');
-        document.getElementById('page-tag').innerText = userRole === 'vet' ? 'Dokter Mode' : 'Klien Mode';
-
-        if (userRole === 'vet') {
-          document.getElementById('client-timer-box').classList.add('hidden');
-          document.getElementById('vet-timer-box').classList.remove('hidden');
-        } else {
-          initClientTimer(20 * 60);
-        }
-
-        await muatRiwayatChat();
-        pollInterval = setInterval(muatRiwayatChat, 2000);
-      } else {
-        document.getElementById('view-main').classList.remove('hidden');
-        document.getElementById('view-payment').classList.add('hidden');
-        document.getElementById('view-waiting').classList.add('hidden');
-        document.getElementById('view-chat').classList.add('hidden');
-      }
+      muatSemuaPesanan();
     });
 
-    // FUNGSI KIRIM TELEGRAM DIPERBAIKI (MENGGUNAKAN URLSEARCHPARAMS UNTUK MENGHINDARI CORS/HEADER ISSUES)
-    async function kirimNotifTelegram(pesanText) {
-      if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN.includes("MASUKKAN_TOKEN")) {
-        alert("⚠️ Perhatian: TELEGRAM_BOT_TOKEN belum diisi di kode index.html!");
-        return;
-      }
-      if (!TELEGRAM_CHAT_ID || TELEGRAM_CHAT_ID.includes("MASUKKAN_CHAT")) {
-        alert("⚠️ Perhatian: TELEGRAM_CHAT_ID belum diisi di kode index.html!");
+    function keluarAdmin() {
+      window.location.href = "index.html";
+    }
+
+    async function muatSemuaPesanan() {
+      const container = document.getElementById('list-pesanan');
+      container.innerHTML = `<p class="text-xs text-gray-400 text-center py-6">Memuat data pesanan...</p>`;
+
+      if (!dbSupabase) {
+        container.innerHTML = `<p class="text-xs text-rose-500 text-center py-6">Gagal terhubung ke database Supabase.</p>`;
         return;
       }
 
       try {
-        const endpoint = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-        const params = new URLSearchParams();
-        params.append('chat_id', TELEGRAM_CHAT_ID);
-        params.append('text', pesanText);
-
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          body: params
-        });
-
-        const resData = await response.json();
-        if (!resData.ok) {
-          alert("⚠️ Telegram API Error: " + resData.description);
-        } else {
-          console.log("Pesan Telegram Berhasil Terkirim!");
-        }
-      } catch (err) {
-        alert("⚠️ Gagal mengirim pesan ke Telegram: " + err.message);
-      }
-    }
-
-    function aksesAdmin() {
-      const inputPass = prompt("Masukkan Kata Sandi Panel Admin:");
-      if (inputPass === "210794") {
-        window.location.href = "admin.html";
-      } else if (inputPass !== null) {
-        alert("Kata sandi salah! Akses ditolak.");
-      }
-    }
-
-    function keluarKeHome() {
-      sessionStorage.clear();
-      localStorage.clear();
-      window.location.href = "https://vetconnect.my.id/";
-    }
-
-    function pilihLayanan(nama, harga) {
-      layananAktif = nama;
-      hargaLayananAktif = harga;
-      document.getElementById('selected-service').value = `${nama} - Rp ${harga.toLocaleString('id-ID')}`;
-      const formSection = document.getElementById('section-booking');
-      formSection.classList.remove('hidden');
-      formSection.scrollIntoView({ behavior: 'smooth' });
-    }
-
-    function kembaliKeBooking() {
-      document.getElementById('view-payment').classList.add('hidden');
-      document.getElementById('view-main').classList.remove('hidden');
-    }
-
-    // TAHAP 1: Klien Lanjut Pembayaran -> Simpan DB & Tampilkan Halaman Transfer
-    async function lanjutKePembayaran() {
-      const tanggal = document.getElementById('booking-date').value;
-      const pemilik = document.getElementById('owner-name').value;
-      const whatsapp = document.getElementById('owner-whatsapp').value;
-      const hewan = document.getElementById('pet-info').value;
-
-      if (!tanggal || !pemilik || !whatsapp || !hewan) {
-        alert('Mohon lengkapi semua data pemesanan!');
-        return;
-      }
-
-      let cleanWA = whatsapp.replace(/[^0-9]/g, '');
-      if (cleanWA.startsWith('0')) cleanWA = '62' + cleanWA.substring(1);
-
-      currentBookingId = 'BK-' + Math.floor(100000 + Math.random() * 900000);
-      currentOwnerName = pemilik;
-
-      const kodeUnik = Math.floor(Math.random() * 900) + 100;
-      currentFinalPrice = hargaLayananAktif + kodeUnik;
-
-      const dataBaru = {
-        booking_id: currentBookingId,
-        nama_pemilik: pemilik, 
-        whatsapp: cleanWA,
-        info_hewan: hewan, 
-        layanan: layananAktif, 
-        tanggal_booking: tanggal,
-        status: 'Pending',
-        is_expired: false,
-        created_at: new Date().toISOString()
-      };
-
-      if (dbSupabase) {
-        try { await dbSupabase.from('bookings').insert([dataBaru]); } catch (e) {}
-      }
-
-      document.getElementById('pay-booking-id').innerText = currentBookingId;
-      document.getElementById('pay-total-amount').innerText = `Rp ${currentFinalPrice.toLocaleString('id-ID')}`;
-      
-      document.getElementById('view-main').classList.add('hidden');
-      document.getElementById('view-payment').classList.remove('hidden');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    // TAHAP 2: Klien Klik "Saya Sudah Transfer" -> Kirim Notif Telegram Dulu, Baru Masuk Waiting Screen
-    async function konfirmasiSudahTransfer(evt) {
-      const btn = evt ? evt.target : document.getElementById('btn-konfirmasi-transfer');
-      if (btn) {
-        btn.innerText = "⏳ Mengirim Konfirmasi...";
-        btn.disabled = true;
-      }
-
-      if (dbSupabase) {
-        try {
-          await dbSupabase.from('bookings').update({ status: 'Menunggu Konfirmasi' }).eq('booking_id', currentBookingId);
-        } catch (e) {}
-      }
-
-      const linkVerify = `https://vetconnect.my.id/admin.html?action=verify&room=${currentBookingId}`;
-
-      // PESAN TEXT DENGAN FORMAT AMAN
-      const pesanTg = `💳 KONFIRMASI PEMBAYARAN DIPERLUKAN\n\n` +
-                      `ID: ${currentBookingId}\n` +
-                      `Klien: ${currentOwnerName}\n` +
-                      `Layanan: ${layananAktif}\n` +
-                      `Total Transfer: Rp ${currentFinalPrice.toLocaleString('id-ID')}\n\n` +
-                      `Klien telah mengonfirmasi transfer. Silakan cek mutasi BCA Anda.\n\n` +
-                      `KLIK LINK DISINI UNTUK KONFIRMASI LUNAS & MASUK CHAT:\n` +
-                      `${linkVerify}`;
-
-      // Kirim Notifikasi Telegram
-      await kirimNotifTelegram(pesanTg);
-
-      // Tampilkan Halaman Menunggu (Waiting Screen)
-      document.getElementById('view-payment').classList.add('hidden');
-      document.getElementById('view-waiting').classList.remove('hidden');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-
-      // Cek status berkala di database Supabase (tiap 3 detik)
-      if (checkStatusInterval) clearInterval(checkStatusInterval);
-      checkStatusInterval = setInterval(cekStatusPembayaranKlien, 3000);
-    }
-
-    // FUNGSI CEK STATUS BERKALA DI WAITING SCREEN KLIEN
-    async function cekStatusPembayaranKlien() {
-      if (!dbSupabase || !currentBookingId) return;
-      try {
-        const { data } = await dbSupabase
+        const { data, error } = await dbSupabase
           .from('bookings')
-          .select('status')
-          .eq('booking_id', currentBookingId)
-          .single();
+          .select('*')
+          .order('created_at', { ascending: false });
 
-        if (data && data.status === 'Terverifikasi') {
-          clearInterval(checkStatusInterval);
-          // Otomatis arahkan klien ke ruang chat konsultasi
-          const linkChatKlien = `https://vetconnect.my.id/index.html?mode=chat&role=client&name=${encodeURIComponent(currentOwnerName)}&room=${currentBookingId}`;
-          window.location.href = linkChatKlien;
-        }
-      } catch (e) {}
-    }
+        if (error) throw error;
 
-    function initClientTimer(durationSeconds) {
-      const timerEndTimeKey = `timer_end_${currentRoomId}`;
-      let endTime = sessionStorage.getItem(timerEndTimeKey);
-
-      if (!endTime) {
-        endTime = Date.now() + (durationSeconds * 1000);
-        sessionStorage.setItem(timerEndTimeKey, endTime);
-      } else {
-        endTime = parseInt(endTime);
-      }
-
-      const display = document.getElementById('timer-display');
-
-      countdownInterval = setInterval(() => {
-        let timeLeft = Math.floor((endTime - Date.now()) / 1000);
-
-        if (timeLeft <= 0) {
-          clearInterval(countdownInterval);
-          sessionStorage.removeItem(timerEndTimeKey);
-          display.innerText = "00:00";
-          akhiriSesi();
-          return;
-        }
-
-        let m = Math.floor(timeLeft / 60);
-        let s = timeLeft % 60;
-        display.innerText = `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
-      }, 1000);
-    }
-
-    async function akhiriSesi() {
-      if (countdownInterval) clearInterval(countdownInterval);
-      if (pollInterval) clearInterval(pollInterval);
-      sessionStorage.removeItem(`timer_end_${currentRoomId}`);
-      if (dbSupabase && currentRoomId) {
-        await dbSupabase.from('bookings').update({ status: 'Selesai', is_expired: true }).eq('booking_id', currentRoomId);
-      }
-      sessionStorage.clear();
-      document.getElementById('modal-expired').classList.remove('hidden');
-    }
-
-    function handleKeyPress(e) {
-      if (e.key === 'Enter') kirimPesan();
-    }
-
-    function previewFile(event) {
-      const file = event.target.files[0];
-      if (file) {
-        selectedMedia = file;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          document.getElementById('img-preview').src = e.target.result;
-          document.getElementById('media-preview').classList.remove('hidden');
-        };
-        reader.readAsDataURL(file);
+        listBookingData = data || [];
+        renderDaftarPesanan(listBookingData);
+      } catch (err) {
+        container.innerHTML = `<p class="text-xs text-rose-500 text-center py-6">Terjadi kesalahan saat mengambil data.</p>`;
       }
     }
 
-    function batalMedia() {
-      selectedMedia = null;
-      document.getElementById('media-input').value = '';
-      document.getElementById('media-preview').classList.add('hidden');
-    }
+    function renderDaftarPesanan(data) {
+      const container = document.getElementById('list-pesanan');
+      document.getElementById('stat-total').innerText = data.length;
+      
+      // Hitung pesanan yang memerlukan verifikasi (status Pending maupun Menunggu Konfirmasi)
+      const pendingCount = data.filter(d => d.status === 'Pending' || d.status === 'Menunggu Konfirmasi').length;
+      document.getElementById('stat-pending').innerText = pendingCount;
 
-    async function kirimPesan() {
-      const input = document.getElementById('input-pesan');
-      const text = input.value.trim();
-
-      if (!text && !selectedMedia) return;
-
-      const pengirimNama = userRole === 'vet' ? 'drh. Najib' : currentUserName;
-      let mediaUrl = selectedMedia ? document.getElementById('img-preview').src : null;
-
-      const pesanData = {
-        room_id: currentRoomId,
-        sender_role: userRole,
-        sender_name: pengirimNama,
-        message: text,
-        media_url: mediaUrl,
-        created_at: new Date().toISOString()
-      };
-
-      input.value = '';
-      batalMedia();
-
-      if (dbSupabase) {
-        try {
-          await dbSupabase.from('messages').insert([pesanData]);
-          muatRiwayatChat();
-        } catch (err) {}
+      if (data.length === 0) {
+        container.innerHTML = `<p class="text-xs text-gray-400 text-center py-6">Belum ada pesanan masuk.</p>`;
+        return;
       }
-    }
 
-    async function muatRiwayatChat() {
-      if (!dbSupabase || !currentRoomId) return;
-      try {
-        const { data } = await dbSupabase.from('messages').select('*').eq('room_id', currentRoomId).order('created_at', { ascending: true });
-        if (data) renderSemuaPesan(data);
-      } catch (err) {}
-    }
-
-    function renderSemuaPesan(dataPesan) {
-      const container = document.getElementById('chat-messages');
-      const welcomeHTML = container.querySelector('.bg-teal-100')?.outerHTML || '';
-      let html = welcomeHTML;
-
-      dataPesan.forEach(msg => {
-        const isMe = msg.sender_role === userRole;
-        let mediaContent = msg.media_url ? `<img src="${msg.media_url}" class="w-48 h-32 object-cover rounded-lg mb-1 border">` : '';
-        const time = new Date(msg.created_at || Date.now()).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+      let html = '';
+      data.forEach(item => {
+        const isPerluVerifikasi = item.status === 'Pending' || item.status === 'Menunggu Konfirmasi';
+        const linkDokter = `https://vetconnect.my.id/index.html?mode=chat&role=vet&name=${encodeURIComponent('drh. Najib')}&room=${item.booking_id}`;
 
         html += `
-          <div class="p-3 rounded-2xl max-w-[85%] shadow-sm ${isMe ? 'bg-teal-600 text-white ml-auto rounded-tr-none' : 'bg-white text-gray-800 border rounded-tl-none'}">
-            <p class="font-bold text-[10px] opacity-80 mb-0.5">${msg.sender_name}</p>
-            <div>${mediaContent}${msg.message ? `<p>${msg.message}</p>` : ''}</div>
-            <span class="text-[8px] opacity-70 block mt-1 text-right">${time}</span>
+          <div class="p-4 rounded-xl border border-gray-200 bg-gray-50 space-y-3">
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded ${isPerluVerifikasi ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}">
+                  ${item.status || 'Pending'}
+                </span>
+                <h3 class="font-bold text-sm text-gray-900 mt-1">${item.nama_pemilik} (${item.info_hewan})</h3>
+                <p class="text-xs text-teal-700 font-semibold">${item.layanan}</p>
+              </div>
+              <span class="text-[10px] text-gray-400 font-mono">${item.booking_id}</span>
+            </div>
+
+            <div class="text-[11px] text-gray-600 space-y-0.5 bg-white p-2.5 rounded-lg border">
+              <p>📱 WA: <a href="https://wa.me/${item.whatsapp}" target="_blank" class="text-teal-600 underline font-semibold">${item.whatsapp}</a></p>
+              <p>📅 Tgl Booking: ${item.tanggal_booking || '-'}</p>
+            </div>
+
+            <div class="flex flex-wrap gap-2 pt-1">
+              ${isPerluVerifikasi ? `
+                <button onclick="verifikasiManual('${item.booking_id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold">
+                  ✅ Konfirmasi Lunas
+                </button>
+              ` : ''}
+
+              <a href="${linkDokter}" target="_blank" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1">
+                👨‍⚕️ Masuk Chat Dokter
+              </a>
+
+              <button onclick="bukaModalResep('${item.booking_id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold">
+                📝 Buat Resep PDF
+              </button>
+            </div>
           </div>
         `;
       });
 
       container.innerHTML = html;
-      container.scrollTop = container.scrollHeight;
     }
 
-    function bukaVideoCall() {
-      const uniqueRoomName = `VetBook-Consultation-DrNajib-${currentRoomId}`;
-      const vcRoomUrl = `https://meet.jit.si/${uniqueRoomName}`;
-      document.getElementById('vc-iframe').src = vcRoomUrl;
-      document.getElementById('modal-vc-inapp').classList.remove('hidden');
+    async function verifikasiManual(bookingId) {
+      if (dbSupabase) {
+        await dbSupabase.from('bookings').update({ status: 'Terverifikasi' }).eq('booking_id', bookingId);
+      }
+      muatSemuaPesanan();
+    }
 
-      let timeLeftVC = 180;
-      const vcDisplay = document.getElementById('vc-timer-display');
-      vcDisplay.innerText = "⏱️ 03:00";
+    function bukaModalResep(bookingId) {
+      activeResepBooking = listBookingData.find(b => b.booking_id === bookingId);
+      if (!activeResepBooking) return;
 
-      if (vcTimerInterval) clearInterval(vcTimerInterval);
+      document.getElementById('resep-hewan').value = activeResepBooking.info_hewan || '';
+      document.getElementById('resep-diagnosis').value = activeResepBooking.resep_diagnosis || '';
+      document.getElementById('resep-obat').value = activeResepBooking.resep_obat || '';
+      document.getElementById('resep-edukasi').value = activeResepBooking.resep_edukasi || '';
 
-      vcTimerInterval = setInterval(() => {
-        timeLeftVC--;
-        
-        let m = Math.floor(timeLeftVC / 60);
-        let s = timeLeftVC % 60;
-        vcDisplay.innerText = `⏱️ ${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+      document.getElementById('modal-resep').classList.remove('hidden');
+    }
 
-        if (timeLeftVC <= 0) {
-          clearInterval(vcTimerInterval);
-          alert("Waktu Video Call (3 menit) telah habis. Panggilan akan ditutup.");
-          tutupVideoCall();
+    function tutupModalResep() {
+      document.getElementById('modal-resep').classList.add('hidden');
+      activeResepBooking = null;
+    }
+
+    async function generateDanKirimPDF() {
+      if (!activeResepBooking) return;
+      
+      const hewan = document.getElementById('resep-hewan').value.trim();
+      const diagnosis = document.getElementById('resep-diagnosis').value.trim();
+      const obat = document.getElementById('resep-obat').value.trim();
+      const edukasi = document.getElementById('resep-edukasi').value.trim();
+
+      if (!diagnosis || !obat) {
+        alert("Mohon isi Diagnosis dan Daftar Obat terlebih dahulu!");
+        return;
+      }
+
+      const tglFormatted = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+      const verifyUrl = `https://vetconnect.my.id/verify.html?id=${activeResepBooking.booking_id}`;
+
+      // 1. Simpan Data Resep ke Supabase
+      if (dbSupabase) {
+        const { error } = await dbSupabase.from('bookings').update({
+          resep_hewan: hewan,
+          resep_diagnosis: diagnosis,
+          resep_obat: obat,
+          resep_edukasi: edukasi,
+          resep_tanggal: tglFormatted,
+          status: 'Selesai',
+          is_expired: true
+        }).eq('booking_id', activeResepBooking.booking_id);
+
+        if (error) {
+          console.error("Gagal simpan ke Supabase:", error);
+          alert("Peringatan: Gagal menyimpan data resep ke database.");
         }
-      }, 1000);
-    }
+      }
 
-    function tutupVideoCall() {
-      if (vcTimerInterval) clearInterval(vcTimerInterval);
-      document.getElementById('vc-iframe').src = '';
-      document.getElementById('modal-vc-inapp').classList.add('hidden');
+      // 2. Isi Data ke Template PDF
+      document.getElementById('pdf-booking-id').innerText = activeResepBooking.booking_id;
+      document.getElementById('pdf-tanggal').innerText = tglFormatted;
+      document.getElementById('pdf-pemilik').innerText = activeResepBooking.nama_pemilik;
+      document.getElementById('pdf-hewan').innerText = hewan || activeResepBooking.info_hewan;
+      document.getElementById('pdf-diagnosis').innerText = diagnosis;
+      document.getElementById('pdf-obat').innerText = obat;
+      document.getElementById('pdf-edukasi').innerText = edukasi || '-';
+
+      // 3. Render QR Code Verifikasi
+      const qrContainer = document.getElementById('qrcode-pdf');
+      qrContainer.innerHTML = "";
+      new QRCode(qrContainer, { text: verifyUrl, width: 85, height: 85 });
+
+      // 4. Generate Berkas PDF
+      const element = document.getElementById('pdf-template');
+      element.classList.remove('hidden');
+
+      const opt = {
+        margin: 0.3,
+        filename: `Resep_TeleVet_${activeResepBooking.booking_id}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+
+      await html2pdf().set(opt).from(element).save();
+      element.classList.add('hidden');
+
+      // 5. Susun Pesan WA Pengantar
+      const pesanWA = `Halo Kak ${activeResepBooking.nama_pemilik},\n\n` +
+                       `Berikut kami lampirkan berkas *Resep Digital Resmi & Edukasi Perawatan* dari *drh. Nur Rohman Najib* (TeleVet).\n\n` +
+                       `📄 *Berkas PDF telah terunduh di HP/Komputer Dokter.* Silakan lampirkan file PDF tersebut ke pesan ini.\n\n` +
+                       `🔍 Keaslian resep ini juga dapat diverifikasi secara publik melalui link berikut:\n${verifyUrl}\n\n` +
+                       `Semoga anabul lekas sehat kembali! 🙏✨`;
+
+      const waUrl = `https://wa.me/${activeResepBooking.whatsapp}?text=${encodeURIComponent(pesanWA)}`;
+      
+      tutupModalResep();
+      muatSemuaPesanan();
+      window.open(waUrl, '_blank');
     }
   </script>
 </body>
