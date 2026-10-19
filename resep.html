@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resep Digital & Edukasi - VetConnect</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans p-4 min-h-screen flex flex-col justify-between">
+
+  <div class="max-w-md mx-auto w-full space-y-4">
+    <!-- Tombol Unduh PDF -->
+    <div class="flex justify-between items-center bg-teal-800 text-white p-3 rounded-xl shadow-md">
+      <span class="text-xs font-bold">📋 Resep Digital Resmi</span>
+      <button onclick="unduhPDF()" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1 shadow">
+        📥 Unduh PDF
+      </button>
+    </div>
+
+    <!-- Template Resep yang Ditampilkan ke Klien -->
+    <div id="pdf-content" class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 space-y-5">
+      
+      <!-- Kop Dokter -->
+      <div class="border-b-2 border-teal-600 pb-3 flex justify-between items-start">
+        <div>
+          <h1 class="text-base font-bold text-teal-800">drh. Nur Rohman Najib</h1>
+          <p class="text-[11px] text-teal-600 font-medium">Dokter Hewan / TeleVet Consultant</p>
+          <p class="text-[9px] text-gray-500 mt-0.5">📍 Malang, Jawa Timur | SIPH / STRV Active</p>
+        </div>
+        <span class="text-[9px] font-bold bg-teal-100 text-teal-800 px-2 py-1 rounded-md shrink-0">RESEP DIGITAL</span>
+      </div>
+
+      <!-- Info Pasien -->
+      <div class="grid grid-cols-2 text-[11px] gap-2 bg-teal-50/70 p-3 rounded-xl border border-teal-100">
+        <div>
+          <p class="text-gray-500">No. Booking:</p>
+          <p id="res-booking-id" class="font-bold text-gray-800 font-mono">-</p>
+          <p class="text-gray-500 mt-1">Tanggal:</p>
+          <p id="res-tanggal" class="font-semibold text-gray-800">-</p>
+        </div>
+        <div>
+          <p class="text-gray-500">Pemilik:</p>
+          <p id="res-pemilik" class="font-bold text-gray-800">-</p>
+          <p class="text-gray-500 mt-1">Pasien Hewan:</p>
+          <p id="res-hewan" class="font-semibold text-teal-700">-</p>
+        </div>
+      </div>
+
+      <!-- Detail Diagnosis & Obat -->
+      <div class="space-y-4 text-xs">
+        <div>
+          <h3 class="font-bold text-teal-800 border-b pb-1 flex items-center gap-1">🩺 DIAGNOSIS DOKTER</h3>
+          <p id="res-diagnosis" class="mt-1.5 text-gray-700 bg-gray-50 p-2.5 rounded-lg border leading-relaxed">-</p>
+        </div>
+
+        <div>
+          <h3 class="font-bold text-teal-800 border-b pb-1 flex items-center gap-1">💊 R/ DAFTAR OBAT & DOSIS</h3>
+          <p id="res-obat" class="mt-1.5 font-mono text-gray-800 whitespace-pre-line bg-gray-50 p-2.5 rounded-lg border leading-relaxed">-</p>
+        </div>
+
+        <div>
+          <h3 class="font-bold text-teal-800 border-b pb-1 flex items-center gap-1">📋 CATATAN EDUKASI & PERAWATAN</h3>
+          <p id="res-edukasi" class="mt-1.5 text-gray-700 whitespace-pre-line bg-gray-50 p-2.5 rounded-lg border leading-relaxed">-</p>
+        </div>
+      </div>
+
+      <!-- Verifikasi QR & TTD -->
+      <div class="pt-4 border-t flex justify-between items-end text-[10px] text-gray-500">
+        <div>
+          <p class="font-bold text-gray-700 mb-1">Verifikasi Keaslian:</p>
+          <div id="qrcode-box"></div>
+        </div>
+        <div class="text-center">
+          <p class="mb-8 text-gray-600">Dokter Hewan Pemeriksa,</p>
+          <p class="font-bold text-gray-800 underline">drh. Nur Rohman Najib</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer class="text-center py-4 text-[10px] text-gray-400">
+    <p>© 2026 VetConnect - Layanan TeleVet Dokter Hewan</p>
+  </footer>
+
+  <script>
+    const SUPABASE_URL = "https://gobaqeeadobzpscqexax.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvYmFxZWVhZG9ienBzY3FleGF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODY2ODEsImV4cCI6MjEwNTE2MjY4MX0.Usq9ECO3WQ4u7CXei7ylSBkefoMgFCL03qRwROMJs7U";
+    
+    let dbSupabase = null;
+    if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+      dbSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    }
+
+    let bookingIdAktif = '';
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      bookingIdAktif = urlParams.get('id');
+
+      if (!bookingIdAktif) {
+        alert("Kode pemesanan tidak ditemukan.");
+        return;
+      }
+
+      if (dbSupabase) {
+        try {
+          const { data, error } = await dbSupabase
+            .from('bookings')
+            .select('*')
+            .eq('booking_id', bookingIdAktif)
+            .single();
+
+          if (error || !data) {
+            alert("Resep tidak ditemukan atau belum diterbitkan.");
+            return;
+          }
+
+          renderDataResep(data);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    });
+
+    function renderDataResep(data) {
+      document.getElementById('res-booking-id').innerText = data.booking_id;
+      document.getElementById('res-tanggal').innerText = data.resep_tanggal || new Date().toLocaleDateString('id-ID');
+      document.getElementById('res-pemilik').innerText = data.nama_pemilik || '-';
+      document.getElementById('res-hewan').innerText = data.resep_hewan || data.info_hewan || '-';
+      document.getElementById('res-diagnosis').innerText = data.resep_diagnosis || '-';
+      document.getElementById('res-obat').innerText = data.resep_obat || '-';
+      document.getElementById('res-edukasi').innerText = data.resep_edukasi || '-';
+
+      // QR Code Verifikasi
+      const currentUrl = window.location.href;
+      const qrBox = document.getElementById('qrcode-box');
+      qrBox.innerHTML = "";
+      new QRCode(qrBox, { text: currentUrl, width: 70, height: 70 });
+    }
+
+    async function unduhPDF() {
+      const element = document.getElementById('pdf-content');
+      const opt = {
+        margin: 0.2,
+        filename: `Resep_Digital_${bookingIdAktif}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+      };
+      await html2pdf().set(opt).from(element).save();
+    }
+  </script>
+</body>
+</html>
