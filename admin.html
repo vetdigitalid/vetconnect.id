@@ -17,7 +17,6 @@
       <h1 class="text-lg font-bold flex items-center gap-2">🔐 Panel Admin VetBook</h1>
       
       <div class="flex items-center gap-2">
-        <!-- Tombol Pintasan ke Halaman Kalkulator Terpisah -->
         <a href="kalkulator.html" target="_blank" class="text-xs bg-amber-500 hover:bg-amber-600 text-white font-bold px-3 py-1.5 rounded-lg transition-all shadow-sm flex items-center gap-1">
           <span>🧮 Kalkulator Dosis</span>
         </a>
@@ -160,7 +159,15 @@
     let listBookingData = [];
     let activeResepBooking = null;
 
+    function initDatabase() {
+      if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+        dbSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      }
+    }
+
     window.addEventListener('DOMContentLoaded', async () => {
+      initDatabase();
+
       const urlParams = new URLSearchParams(window.location.search);
       const action = urlParams.get('action');
       const room = urlParams.get('room');
@@ -169,7 +176,6 @@
       if (action === 'verify' && room && dbSupabase) {
         try {
           await dbSupabase.from('bookings').update({ status: 'Terverifikasi' }).eq('booking_id', room);
-          // Langsung alihkan dokter masuk ke Ruang Chat Konsultasi
           window.location.href = `index.html?mode=chat&role=vet&name=${encodeURIComponent('drh. Najib')}&room=${room}`;
           return;
         } catch (e) {
@@ -177,7 +183,7 @@
         }
       }
 
-      muatSemuaPesanan();
+      await muatSemuaPesanan();
     });
 
     function keluarAdmin() {
@@ -187,6 +193,8 @@
     async function muatSemuaPesanan() {
       const container = document.getElementById('list-pesanan');
       container.innerHTML = `<p class="text-xs text-gray-400 text-center py-6">Memuat data pesanan...</p>`;
+
+      if (!dbSupabase) initDatabase();
 
       if (!dbSupabase) {
         container.innerHTML = `<p class="text-xs text-rose-500 text-center py-6">Gagal terhubung ke database Supabase.</p>`;
@@ -204,6 +212,7 @@
         listBookingData = data || [];
         renderDaftarPesanan(listBookingData);
       } catch (err) {
+        console.error(err);
         container.innerHTML = `<p class="text-xs text-rose-500 text-center py-6">Terjadi kesalahan saat mengambil data.</p>`;
       }
     }
@@ -212,7 +221,6 @@
       const container = document.getElementById('list-pesanan');
       document.getElementById('stat-total').innerText = data.length;
       
-      // Hitung pesanan yang memerlukan verifikasi (status Pending maupun Menunggu Konfirmasi)
       const pendingCount = data.filter(d => d.status === 'Pending' || d.status === 'Menunggu Konfirmasi').length;
       document.getElementById('stat-pending').innerText = pendingCount;
 
@@ -224,7 +232,7 @@
       let html = '';
       data.forEach(item => {
         const isPerluVerifikasi = item.status === 'Pending' || item.status === 'Menunggu Konfirmasi';
-        const linkDokter = `https://vetconnect.my.id/index.html?mode=chat&role=vet&name=${encodeURIComponent('drh. Najib')}&room=${item.booking_id}`;
+        const linkDokter = `index.html?mode=chat&role=vet&name=${encodeURIComponent('drh. Najib')}&room=${item.booking_id}`;
 
         html += `
           <div class="p-4 rounded-xl border border-gray-200 bg-gray-50 space-y-3">
@@ -251,12 +259,16 @@
                 </button>
               ` : ''}
 
-              <a href="${linkDokter}" target="_blank" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1">
+              <a href="${linkDokter}" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1">
                 👨‍⚕️ Masuk Chat Dokter
               </a>
 
               <button onclick="bukaModalResep('${item.booking_id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold">
                 📝 Buat Resep PDF
+              </button>
+
+              <button onclick="hapusPesanan('${item.booking_id}')" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 ml-auto">
+                🗑️ Hapus Pesanan
               </button>
             </div>
           </div>
@@ -266,7 +278,30 @@
       container.innerHTML = html;
     }
 
+    async function hapusPesanan(bookingId) {
+      const konfirmasi = confirm(`Apakah Anda yakin ingin menghapus pesanan (${bookingId})?\n\nTindakan ini akan menghapus data pesanan dan riwayat chat dari database secara permanen!`);
+      if (!konfirmasi) return;
+
+      if (!dbSupabase) initDatabase();
+
+      try {
+        await dbSupabase.from('messages').delete().eq('room_id', bookingId);
+        const { error } = await dbSupabase.from('bookings').delete().eq('booking_id', bookingId);
+
+        if (error) {
+          alert("Gagal menghapus data: " + error.message);
+        } else {
+          alert(`✅ Pesanan (${bookingId}) berhasil dihapus secara permanen dari database.`);
+          muatSemuaPesanan();
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Terjadi kesalahan saat menghapus pesanan.");
+      }
+    }
+
     async function verifikasiManual(bookingId) {
+      if (!dbSupabase) initDatabase();
       if (dbSupabase) {
         await dbSupabase.from('bookings').update({ status: 'Terverifikasi' }).eq('booking_id', bookingId);
       }
@@ -305,6 +340,8 @@
 
       const tglFormatted = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
       const verifyUrl = `https://vetconnect.my.id/verify.html?id=${activeResepBooking.booking_id}`;
+
+      if (!dbSupabase) initDatabase();
 
       // 1. Simpan Data Resep ke Supabase
       if (dbSupabase) {
