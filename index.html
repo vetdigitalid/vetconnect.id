@@ -199,7 +199,7 @@
         Setelah Anda melakukan transfer sesuai nominal di atas, klik tombol di bawah untuk mengirim konfirmasi peninjauan pembayaran ke dokter.
       </div>
 
-      <button type="button" onclick="konfirmasiSudahTransfer()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-emerald-700 active:scale-95 transition-all shadow-md">
+      <button type="button" id="btn-konfirmasi-transfer" onclick="konfirmasiSudahTransfer(event)" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-emerald-700 active:scale-95 transition-all shadow-md">
         ✅ Saya Sudah Transfer, Kirim Konfirmasi
       </button>
       
@@ -325,7 +325,7 @@
     const SUPABASE_URL = "https://gobaqeeadobzpscqexax.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvYmFxZWVhZG9ienBzY3FleGF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODY2ODEsImV4cCI6MjEwNTE2MjY4MX0.Usq9ECO3WQ4u7CXei7ylSBkefoMgFCL03qRwROMJs7U";
     
-    // CONFIG BOT TELEGRAM ANDA
+    // CONFIG BOT TELEGRAM ANDA (Isikan Token & Chat ID dalam tanda petik)
     const TELEGRAM_BOT_TOKEN = "MASUKKAN_TOKEN_BOT_DISINI"; 
     const TELEGRAM_CHAT_ID = "MASUKKAN_CHAT_ID_DISINI";
 
@@ -422,25 +422,32 @@
       }
     });
 
-    async function kirimNotifTelegram(pesanText, inlineKeyboard = null) {
-      if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN === "MASUKKAN_TOKEN_BOT_DISINI") return;
+    // FUNGSI KIRIM NOTIFIKASI TELEGRAM DENGAN HANDLING ERROR & URL ENCODING STABIL
+    async function kirimNotifTelegram(pesanText) {
+      if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN === "MASUKKAN_TOKEN_BOT_DISINI") {
+        console.warn("Token Telegram belum dikonfigurasi.");
+        return;
+      }
       try {
         const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-        const payload = {
-          chat_id: TELEGRAM_CHAT_ID,
-          text: pesanText,
-          parse_mode: 'HTML'
-        };
-        if (inlineKeyboard) {
-          payload.reply_markup = { inline_keyboard: inlineKeyboard };
-        }
-        await fetch(url, {
+        const response = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify({
+            chat_id: TELEGRAM_CHAT_ID,
+            text: pesanText,
+            parse_mode: 'HTML'
+          })
         });
+
+        const result = await response.json();
+        if (!result.ok) {
+          console.error("Telegram API Error:", result.description);
+        } else {
+          console.log("Notifikasi Telegram berhasil terkirim!");
+        }
       } catch (e) {
-        console.error("Gagal kirim notif Telegram:", e);
+        console.error("Gagal terhubung ke Telegram API:", e);
       }
     }
 
@@ -473,7 +480,7 @@
       document.getElementById('view-main').classList.remove('hidden');
     }
 
-    // TAHAP 1: Klien Lanjut Pembayaran -> Simpan DB & Tampilkan Instruksi
+    // TAHAP 1: Klien Lanjut Pembayaran -> Simpan DB & Tampilkan Halaman Transfer
     async function lanjutKePembayaran() {
       const tanggal = document.getElementById('booking-date').value;
       const pemilik = document.getElementById('owner-name').value;
@@ -518,32 +525,33 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // TAHAP 2: Klien Klik "Saya Sudah Transfer" -> Masuk ke Waiting Screen & Kirim Notif ke Telegram Dokter dengan Tombol Konfirmasi
-    async function konfirmasiSudahTransfer() {
+    // TAHAP 2: Klien Klik "Saya Sudah Transfer" -> Kirim Notif Telegram Dulu, Lalu Beralih ke Waiting Screen
+    async function konfirmasiSudahTransfer(evt) {
+      const btn = evt ? evt.target : document.getElementById('btn-konfirmasi-transfer');
+      if (btn) {
+        btn.innerText = "⏳ Mengirim Konfirmasi...";
+        btn.disabled = true;
+      }
+
       if (dbSupabase) {
         try {
           await dbSupabase.from('bookings').update({ status: 'Menunggu Konfirmasi' }).eq('booking_id', currentBookingId);
         } catch (e) {}
       }
 
-      const linkChatDokter = `https://vetconnect.my.id/index.html?mode=chat&role=vet&name=${encodeURIComponent('drh. Najib')}&room=${currentBookingId}`;
+      const linkVerify = `https://vetconnect.my.id/admin.html?action=verify&room=${currentBookingId}`;
 
-      // KIRIM NOTIFIKASI KE TELEGRAM DOKTER DENGAN TOMBOL AKSI CEPAT
+      // PESAN NOTIFIKASI TELEGRAM DENGAN LINK TEKS HTML TEBAL & JELAS
       const pesanTg = `💳 <b>KONFIRMASI PEMBAYARAN DIPERLUKAN</b>\n\n` +
                       `<b>ID:</b> ${currentBookingId}\n` +
                       `<b>Klien:</b> ${currentOwnerName}\n` +
                       `<b>Layanan:</b> ${layananAktif}\n` +
                       `<b>Total Transfer:</b> Rp ${currentFinalPrice.toLocaleString('id-ID')}\n\n` +
-                      `Klien telah mengonfirmasi transfer. Silakan cek mutasi BCA Anda. Jika sudah masuk, klik tombol di bawah untuk meluluskan:`;
+                      `Klien telah mengonfirmasi transfer. Silakan cek mutasi BCA Anda.\n\n` +
+                      `👉 <b><a href="${linkVerify}">KLIK DISINI UNTUK KONFIRMASI LUNAS & MASUK CHAT</a></b>`;
 
-      // Tombol inline keyboard Telegram agar Anda bisa konfirmasi langsung dari chat Telegram
-      const inlineButtons = [
-        [
-          { text: "✅ Konfirmasi Lunas & Masuk Dokter", url: `https://vetconnect.my.id/admin.html?action=verify&room=${currentBookingId}` }
-        ]
-      ];
-
-      await kirimNotifTelegram(pesanTg, inlineButtons);
+      // Tunggu hingga Telegram API memproses pesan
+      await kirimNotifTelegram(pesanTg);
 
       // Pindahkan Tampilan Klien ke Layar Menunggu (Waiting Screen)
       document.getElementById('view-payment').classList.add('hidden');
