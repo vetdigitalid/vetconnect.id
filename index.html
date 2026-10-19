@@ -15,7 +15,7 @@
       <h1 class="text-xl font-bold flex items-center gap-2">🐾 VetBook</h1>
       <div class="flex items-center gap-2">
         <span id="db-status" class="text-[9px] bg-amber-500 text-white px-2 py-0.5 rounded-full">Connecting...</span>
-        <span id="page-tag" class="text-xs bg-teal-800 px-2 py-1 rounded-full">v5.0</span>
+        <span id="page-tag" class="text-xs bg-teal-800 px-2 py-1 rounded-full">v5.1</span>
       </div>
     </div>
   </header>
@@ -31,15 +31,15 @@
       <p class="text-xs text-gray-500 mt-1">📍 Malang, Indonesia</p>
     </section>
 
-    <!-- Fitur Cek Resep & Riwayat Mandiri untuk Klien -->
+    <!-- Fitur Cek Resep Berbasis Nomor WhatsApp -->
     <section class="bg-teal-50 p-4 rounded-2xl border border-teal-200 space-y-2">
       <h3 class="text-xs font-bold text-teal-800 flex items-center gap-1">
-        🔍 Cek Resep & Riwayat Pesanan
+        🔍 Cek Resep Berdasarkan Nomor WhatsApp
       </h3>
       <div class="flex gap-2">
-        <input type="text" id="input-cek-booking" placeholder="Masukkan ID Booking (Cth: BK-123456)" class="w-full p-2 text-xs border rounded-xl focus:outline-none focus:border-teal-500 font-mono">
+        <input type="tel" id="input-cek-whatsapp" placeholder="Contoh: 081234567890" class="w-full p-2 text-xs border rounded-xl focus:outline-none focus:border-teal-500 font-mono">
         <button type="button" onclick="cekResepKlien()" class="bg-teal-700 hover:bg-teal-800 text-white px-3 py-2 rounded-xl text-xs font-bold shrink-0">
-          Cek
+          Cek Resep
         </button>
       </div>
     </section>
@@ -381,14 +381,54 @@
     let currentRoomId = '';
     let currentUserName = '';
 
-    // FUNGSI CEK RESEP MANDIRI DARI FORM HALAMAN DEPAN
-    function cekResepKlien() {
-      const kode = document.getElementById('input-cek-booking').value.trim();
-      if (!kode) {
-        alert("Mohon masukkan ID Booking Anda!");
+    // FUNGSI CEK RESEP BERDASARKAN NOMOR WHATSAPP DI SUPABASE
+    async function cekResepKlien() {
+      const waInput = document.getElementById('input-cek-whatsapp').value.trim();
+      if (!waInput) {
+        alert("Mohon masukkan Nomor WhatsApp Anda!");
         return;
       }
-      window.location.href = `resep.html?id=${kode}`;
+
+      // Bersihkan format nomor WA (ubah 08... atau +62... menjadi format standar 62...)
+      let cleanWA = waInput.replace(/[^0-9]/g, '');
+      if (cleanWA.startsWith('0')) {
+        cleanWA = '62' + cleanWA.substring(1);
+      }
+
+      if (!dbSupabase) {
+        alert("Database belum terhubung.");
+        return;
+      }
+
+      try {
+        // Cari data booking berdasarkan nomor WhatsApp, urutkan dari yang terbaru
+        const { data, error } = await dbSupabase
+          .from('bookings')
+          .select('booking_id, resep_diagnosis')
+          .eq('whatsapp', cleanWA)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (error || !data || data.length === 0) {
+          alert("Tidak ditemukan riwayat pemesanan atau resep dengan nomor WhatsApp tersebut.");
+          return;
+        }
+
+        const bookingTerbaru = data[0];
+
+        // Cek apakah resep sudah diterbitkan oleh dokter
+        if (!bookingTerbaru.resep_diagnosis) {
+          alert("Pesanan ditemukan (ID: " + bookingTerbaru.booking_id + "), namun resep digital belum diterbitkan oleh dokter. Mohon tunggu sebentar ya.");
+          return;
+        }
+
+        // Jika resep ada, langsung arahkan ke halaman resep
+        window.location.href = `resep.html?id=${bookingTerbaru.booking_id}`;
+
+      } catch (err) {
+        console.error(err);
+        alert("Terjadi kesalahan saat mencari data resep.");
+      }
     }
 
     window.addEventListener('DOMContentLoaded', async () => {
