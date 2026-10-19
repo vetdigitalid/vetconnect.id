@@ -15,7 +15,6 @@
       <h1 class="text-lg font-bold flex items-center gap-2">🔐 Panel Admin VetBook</h1>
       
       <div class="flex items-center gap-2">
-        <!-- Tombol Pintasan ke Halaman Kalkulator Terpisah -->
         <a href="kalkulator.html" target="_blank" class="text-xs bg-amber-500 hover:bg-amber-600 text-white font-bold px-3 py-1.5 rounded-lg transition-all shadow-sm flex items-center gap-1">
           <span>🧮 Kalkulator Dosis</span>
         </a>
@@ -58,4 +57,244 @@
 
   <!-- Modal Buat Resep Digital Standar -->
   <div id="modal-resep" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 hidden overflow-y-auto">
-    <div class="bg-white p-5 rounded-2xl max-w-md
+    <div class="bg-white p-5 rounded-2xl max-w-md w-full space-y-4 my-8">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-bold text-sm text-teal-800">📝 Buat Resep Digital & Edukasi</h3>
+        <button onclick="tutupModalResep()" class="text-gray-400 hover:text-gray-600 font-bold">✕</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-gray-600 mb-1">Nama Hewan / Pasien</label>
+          <input type="text" id="resep-hewan" class="w-full p-2 border rounded-lg">
+        </div>
+        <div>
+          <label class="block font-semibold text-gray-600 mb-1">Diagnosis Dokter</label>
+          <input type="text" id="resep-diagnosis" placeholder="Contoh: Suspek FLUTD / Dehidrasi Ringan" class="w-full p-2 border rounded-lg">
+        </div>
+        <div>
+          <label class="block font-semibold text-gray-600 mb-1">Daftar Obat & Dosis</label>
+          <textarea id="resep-obat" rows="3" placeholder="Contoh:&#10;1. Cefadroxil syr 2x0.5 ml (7 hari)&#10;2. Urilysin 2x1 kapsul" class="w-full p-2 border rounded-lg font-mono text-[11px]"></textarea>
+        </div>
+        <div>
+          <label class="block font-semibold text-gray-600 mb-1">Catatan Edukasi & Perawatan di Rumah</label>
+          <textarea id="resep-edukasi" rows="3" placeholder="Contoh: Jagalah asupan air minum, bersihkan litter box secara rutin." class="w-full p-2 border rounded-lg"></textarea>
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="tutupModalResep()" class="w-1/2 bg-gray-200 text-gray-700 py-2 rounded-xl text-xs font-bold">Batal</button>
+        <button onclick="terbitkanResepDigital()" class="w-1/2 bg-teal-600 text-white py-2 rounded-xl text-xs font-bold hover:bg-teal-700">
+          📄 Terbitkan Resep Digital
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Script Logika Admin -->
+  <script>
+    const SUPABASE_URL = "https://gobaqeeadobzpscqexax.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvYmFxZWVhZG9ienBzY3FleGF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODY2ODEsImV4cCI6MjEwNTE2MjY4MX0.Usq9ECO3WQ4u7CXei7ylSBkefoMgFCL03qRwROMJs7U";
+    
+    let dbSupabase = null;
+    let listBookingData = [];
+    let activeResepBooking = null;
+
+    // FUNGSI INISIALISASI DATABASE & CEK PARAMETER URL (AMAT PENTING)
+    function initDatabase() {
+      if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+        dbSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      initDatabase();
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const action = urlParams.get('action');
+      const room = urlParams.get('room');
+
+      // JIKA DIKLIK DARI TELEGRAM (action=verify&room=BK-XXXXXX)
+      if (action === 'verify' && room && dbSupabase) {
+        try {
+          // Update status pembayaran
+          await dbSupabase.from('bookings').update({ status: 'Terverifikasi' }).eq('booking_id', room);
+          
+          // LANGSUNG ALIHKAN MASUK KE RUANG CHAT CONSULTATION DOKTER (index.html)
+          window.location.href = `index.html?mode=chat&role=vet&name=${encodeURIComponent('drh. Najib')}&room=${room}`;
+          return;
+        } catch (e) {
+          console.error("Gagal autoverifikasi:", e);
+        }
+      }
+
+      // BUKA ADMIN SEPERTI BIASA
+      await muatSemuaPesanan();
+    });
+
+    function keluarAdmin() {
+      window.location.href = "index.html";
+    }
+
+    async function muatSemuaPesanan() {
+      const container = document.getElementById('list-pesanan');
+      container.innerHTML = `<p class="text-xs text-gray-400 text-center py-6">Memuat data pesanan...</p>`;
+
+      if (!dbSupabase) initDatabase();
+
+      if (!dbSupabase) {
+        container.innerHTML = `<p class="text-xs text-rose-500 text-center py-6">Gagal terhubung ke database Supabase.</p>`;
+        return;
+      }
+
+      try {
+        const { data, error } = await dbSupabase
+          .from('bookings')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        listBookingData = data || [];
+        renderDaftarPesanan(listBookingData);
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = `<p class="text-xs text-rose-500 text-center py-6">Terjadi kesalahan saat mengambil data.</p>`;
+      }
+    }
+
+    function renderDaftarPesanan(data) {
+      const container = document.getElementById('list-pesanan');
+      document.getElementById('stat-total').innerText = data.length;
+      
+      const pendingCount = data.filter(d => d.status === 'Pending' || d.status === 'Menunggu Konfirmasi').length;
+      document.getElementById('stat-pending').innerText = pendingCount;
+
+      if (data.length === 0) {
+        container.innerHTML = `<p class="text-xs text-gray-400 text-center py-6">Belum ada pesanan masuk.</p>`;
+        return;
+      }
+
+      let html = '';
+      data.forEach(item => {
+        const isPerluVerifikasi = item.status === 'Pending' || item.status === 'Menunggu Konfirmasi';
+        const linkDokter = `index.html?mode=chat&role=vet&name=${encodeURIComponent('drh. Najib')}&room=${item.booking_id}`;
+
+        html += `
+          <div class="p-4 rounded-xl border border-gray-200 bg-gray-50 space-y-3">
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded ${isPerluVerifikasi ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}">
+                  ${item.status || 'Pending'}
+                </span>
+                <h3 class="font-bold text-sm text-gray-900 mt-1">${item.nama_pemilik} (${item.info_hewan})</h3>
+                <p class="text-xs text-teal-700 font-semibold">${item.layanan}</p>
+              </div>
+              <span class="text-[10px] text-gray-400 font-mono">${item.booking_id}</span>
+            </div>
+
+            <div class="text-[11px] text-gray-600 space-y-0.5 bg-white p-2.5 rounded-lg border">
+              <p>📱 WA: <a href="https://wa.me/${item.whatsapp}" target="_blank" class="text-teal-600 underline font-semibold">${item.whatsapp}</a></p>
+              <p>📅 Tgl Booking: ${item.tanggal_booking || '-'}</p>
+            </div>
+
+            <div class="flex flex-wrap gap-2 pt-1">
+              ${isPerluVerifikasi ? `
+                <button onclick="verifikasiManual('${item.booking_id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold">
+                  ✅ Konfirmasi Lunas
+                </button>
+              ` : ''}
+
+              <a href="${linkDokter}" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1">
+                👨‍⚕️ Masuk Chat Dokter
+              </a>
+
+              <button onclick="bukaModalResep('${item.booking_id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold">
+                📝 Buat Resep PDF
+              </button>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    async function verifikasiManual(bookingId) {
+      if (dbSupabase) {
+        await dbSupabase.from('bookings').update({ status: 'Terverifikasi' }).eq('booking_id', bookingId);
+      }
+      muatSemuaPesanan();
+    }
+
+    function bukaModalResep(bookingId) {
+      activeResepBooking = listBookingData.find(b => b.booking_id === bookingId);
+      if (!activeResepBooking) return;
+
+      document.getElementById('resep-hewan').value = activeResepBooking.info_hewan || '';
+      document.getElementById('resep-diagnosis').value = activeResepBooking.resep_diagnosis || '';
+      document.getElementById('resep-obat').value = activeResepBooking.resep_obat || '';
+      document.getElementById('resep-edukasi').value = activeResepBooking.resep_edukasi || '';
+
+      document.getElementById('modal-resep').classList.remove('hidden');
+    }
+
+    function tutupModalResep() {
+      document.getElementById('modal-resep').classList.add('hidden');
+      activeResepBooking = null;
+    }
+
+    async function terbitkanResepDigital() {
+      if (!activeResepBooking) return;
+      
+      const hewan = document.getElementById('resep-hewan').value.trim();
+      const diagnosis = document.getElementById('resep-diagnosis').value.trim();
+      const obat = document.getElementById('resep-obat').value.trim();
+      const edukasi = document.getElementById('resep-edukasi').value.trim();
+
+      if (!diagnosis || !obat) {
+        alert("Mohon isi Diagnosis dan Daftar Obat terlebih dahulu!");
+        return;
+      }
+
+      const tglFormatted = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+      const resepUrl = `https://vetconnect.my.id/resep.html?id=${activeResepBooking.booking_id}`;
+
+      if (dbSupabase) {
+        const { error } = await dbSupabase.from('bookings').update({
+          resep_hewan: hewan,
+          resep_diagnosis: diagnosis,
+          resep_obat: obat,
+          resep_edukasi: edukasi,
+          resep_tanggal: tglFormatted,
+          status: 'Selesai',
+          is_expired: true
+        }).eq('booking_id', activeResepBooking.booking_id);
+
+        if (error) {
+          console.error("Gagal simpan ke Supabase:", error);
+          alert("Peringatan: Gagal menyimpan data resep ke database.");
+          return;
+        }
+
+        const pesanChat = `📋 RESEP DIGITAL & EDUKASI TELAH TERBIT\n\n` +
+                          `Dokter telah menerbitkan Resep Digital dan Edukasi Perawatan untuk ${hewan || activeResepBooking.info_hewan}.\n\n` +
+                          `Silakan klik tautan di bawah ini untuk melihat & mengunduh PDF:\n` +
+                          `${resepUrl}`;
+
+        await dbSupabase.from('messages').insert([{
+          room_id: activeResepBooking.booking_id,
+          sender_role: 'vet',
+          sender_name: 'drh. Najib',
+          message: pesanChat,
+          created_at: new Date().toISOString()
+        }]);
+      }
+
+      alert("✅ Resep Digital berhasil diterbitkan! Tautan resep telah dikirim ke ruang chat klien.");
+      tutupModalResep();
+      muatSemuaPesanan();
+    }
+  </script>
+</body>
+</html>
