@@ -15,7 +15,7 @@
       <h1 class="text-xl font-bold flex items-center gap-2">🐾 VetBook</h1>
       <div class="flex items-center gap-2">
         <span id="db-status" class="text-[9px] bg-amber-500 text-white px-2 py-0.5 rounded-full">Connecting...</span>
-        <span id="page-tag" class="text-xs bg-teal-800 px-2 py-1 rounded-full">v4.7</span>
+        <span id="page-tag" class="text-xs bg-teal-800 px-2 py-1 rounded-full">v4.9</span>
       </div>
     </div>
   </header>
@@ -157,7 +157,7 @@
         <input type="text" id="pet-info" placeholder="Contoh: Miko (Kucing Persia) / Lemes" class="w-full p-2.5 border rounded-lg text-sm">
       </div>
 
-      <button type="button" onclick="lanjutKePembayaran()" class="w-full bg-teal-600 text-white py-3 rounded-xl font-bold shadow-lg text-sm hover:bg-teal-700 active:scale-95 transition-all flex items-center justify-center gap-2">
+      <button type="button" id="btn-lanjut-pembayaran" onclick="lanjutKePembayaran(event)" class="w-full bg-teal-600 text-white py-3 rounded-xl font-bold shadow-lg text-sm hover:bg-teal-700 active:scale-95 transition-all flex items-center justify-center gap-2">
         <span>💳 Lanjut ke Instruksi Pembayaran</span>
       </button>
     </section>
@@ -325,9 +325,9 @@
     const SUPABASE_URL = "https://gobaqeeadobzpscqexax.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvYmFxZWVhZG9ienBzY3FleGF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODY2ODEsImV4cCI6MjEwNTE2MjY4MX0.Usq9ECO3WQ4u7CXei7ylSBkefoMgFCL03qRwROMJs7U";
     
-    // CONFIG BOT TELEGRAM ANDA (Isikan Token & Chat ID dalam tanda petik)
-    const TELEGRAM_BOT_TOKEN = "MASUKKAN_TOKEN_BOT_DISINI"; 
-    const TELEGRAM_CHAT_ID = "MASUKKAN_CHAT_ID_DISINI";
+    // ⚠️ MASUKKAN TOKEN BOT TELEGRAM & CHAT ID ANDA DI SINI
+    const TELEGRAM_BOT_TOKEN = "8882259713:AAEoyABoTPY971rtTrDgHqnRqsrRwSsrLJk"; 
+    const TELEGRAM_CHAT_ID = "1611281926";
 
     let dbSupabase = null;
     if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
@@ -342,7 +342,7 @@
     let selectedMedia = null;
     let countdownInterval = null;
     let pollInterval = null;
-    let checkStatusInterval = null; // Interval pengecekan status verifikasi di waiting screen
+    let checkStatusInterval = null;
     let vcTimerInterval = null;
     let userRole = 'client';
     let currentRoomId = '';
@@ -422,32 +422,36 @@
       }
     });
 
-    // FUNGSI KIRIM NOTIFIKASI TELEGRAM DENGAN HANDLING ERROR & URL ENCODING STABIL
+    // FUNGSI UTAMA KIRIM NOTIFIKASI TELEGRAM
     async function kirimNotifTelegram(pesanText) {
-      if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN === "MASUKKAN_TOKEN_BOT_DISINI") {
-        console.warn("Token Telegram belum dikonfigurasi.");
+      if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN.includes("MASUKKAN_TOKEN")) {
+        alert("⚠️ Pengingat: TELEGRAM_BOT_TOKEN belum diisi di kode index.html!");
         return;
       }
+      if (!TELEGRAM_CHAT_ID || TELEGRAM_CHAT_ID.includes("MASUKKAN_CHAT")) {
+        alert("⚠️ Pengingat: TELEGRAM_CHAT_ID belum diisi di kode index.html!");
+        return;
+      }
+
       try {
-        const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-        const response = await fetch(url, {
+        const endpoint = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+        const params = new URLSearchParams();
+        params.append('chat_id', TELEGRAM_CHAT_ID);
+        params.append('text', pesanText);
+
+        const response = await fetch(endpoint, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            chat_id: TELEGRAM_CHAT_ID,
-            text: pesanText,
-            parse_mode: 'HTML'
-          })
+          body: params
         });
 
-        const result = await response.json();
-        if (!result.ok) {
-          console.error("Telegram API Error:", result.description);
+        const resData = await response.json();
+        if (!resData.ok) {
+          alert("⚠️ Telegram API Error: " + resData.description);
         } else {
-          console.log("Notifikasi Telegram berhasil terkirim!");
+          console.log("Pesan Telegram Berhasil Terkirim!");
         }
-      } catch (e) {
-        console.error("Gagal terhubung ke Telegram API:", e);
+      } catch (err) {
+        alert("⚠️ Gagal mengirim pesan ke Telegram: " + err.message);
       }
     }
 
@@ -480,8 +484,10 @@
       document.getElementById('view-main').classList.remove('hidden');
     }
 
-    // TAHAP 1: Klien Lanjut Pembayaran -> Simpan DB & Tampilkan Halaman Transfer
-    async function lanjutKePembayaran() {
+    // TAHAP 1: Klien Klik "Lanjut ke Pembayaran" -> Simpan DB + Kirim Notif Telegram "Pesanan Masuk"
+    async function lanjutKePembayaran(evt) {
+      const btn = evt ? evt.target : document.getElementById('btn-lanjut-pembayaran');
+      
       const tanggal = document.getElementById('booking-date').value;
       const pemilik = document.getElementById('owner-name').value;
       const whatsapp = document.getElementById('owner-whatsapp').value;
@@ -490,6 +496,11 @@
       if (!tanggal || !pemilik || !whatsapp || !hewan) {
         alert('Mohon lengkapi semua data pemesanan!');
         return;
+      }
+
+      if (btn) {
+        btn.innerText = "⏳ Memproses Pesanan...";
+        btn.disabled = true;
       }
 
       let cleanWA = whatsapp.replace(/[^0-9]/g, '');
@@ -517,6 +528,22 @@
         try { await dbSupabase.from('bookings').insert([dataBaru]); } catch (e) {}
       }
 
+      // 🔔 KIRIM NOTIFIKASI TELEGRAM SAAT KLIEN KLIbrowser LANJUT KE PEMBAYARAN
+      const pesanTgMasuk = `🔔 PESANAN BARU MASUK (VetConnect)\n\n` +
+                           `ID: ${currentBookingId}\n` +
+                           `Layanan: ${layananAktif}\n` +
+                           `Klien: ${pemilik} (WA: ${cleanWA})\n` +
+                           `Hewan: ${hewan}\n` +
+                           `Total Tagihan: Rp ${currentFinalPrice.toLocaleString('id-ID')}\n\n` +
+                           `Status: Klien sedang melihat instruksi transfer BCA.`;
+
+      await kirimNotifTelegram(pesanTgMasuk);
+
+      if (btn) {
+        btn.innerText = "💳 Lanjut ke Instruksi Pembayaran";
+        btn.disabled = false;
+      }
+
       document.getElementById('pay-booking-id').innerText = currentBookingId;
       document.getElementById('pay-total-amount').innerText = `Rp ${currentFinalPrice.toLocaleString('id-ID')}`;
       
@@ -525,7 +552,7 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // TAHAP 2: Klien Klik "Saya Sudah Transfer" -> Kirim Notif Telegram Dulu, Lalu Beralih ke Waiting Screen
+    // TAHAP 2: Klien Klik "Saya Sudah Transfer" -> Kirim Notif Telegram Konfirmasi + Masuk Waiting Screen
     async function konfirmasiSudahTransfer(evt) {
       const btn = evt ? evt.target : document.getElementById('btn-konfirmasi-transfer');
       if (btn) {
@@ -541,24 +568,21 @@
 
       const linkVerify = `https://vetconnect.my.id/admin.html?action=verify&room=${currentBookingId}`;
 
-      // PESAN NOTIFIKASI TELEGRAM DENGAN LINK TEKS HTML TEBAL & JELAS
-      const pesanTg = `💳 <b>KONFIRMASI PEMBAYARAN DIPERLUKAN</b>\n\n` +
-                      `<b>ID:</b> ${currentBookingId}\n` +
-                      `<b>Klien:</b> ${currentOwnerName}\n` +
-                      `<b>Layanan:</b> ${layananAktif}\n` +
-                      `<b>Total Transfer:</b> Rp ${currentFinalPrice.toLocaleString('id-ID')}\n\n` +
-                      `Klien telah mengonfirmasi transfer. Silakan cek mutasi BCA Anda.\n\n` +
-                      `👉 <b><a href="${linkVerify}">KLIK DISINI UNTUK KONFIRMASI LUNAS & MASUK CHAT</a></b>`;
+      const pesanTgKonfirmasi = `💳 KONFIRMASI PEMBAYARAN DIPERLUKAN\n\n` +
+                                `ID: ${currentBookingId}\n` +
+                                `Klien: ${currentOwnerName}\n` +
+                                `Layanan: ${layananAktif}\n` +
+                                `Total Transfer: Rp ${currentFinalPrice.toLocaleString('id-ID')}\n\n` +
+                                `Klien telah mengonfirmasi transfer. Silakan cek mutasi BCA Anda.\n\n` +
+                                `KLIK LINK DISINI UNTUK KONFIRMASI LUNAS & MASUK CHAT:\n` +
+                                `${linkVerify}`;
 
-      // Tunggu hingga Telegram API memproses pesan
-      await kirimNotifTelegram(pesanTg);
+      await kirimNotifTelegram(pesanTgKonfirmasi);
 
-      // Pindahkan Tampilan Klien ke Layar Menunggu (Waiting Screen)
       document.getElementById('view-payment').classList.add('hidden');
       document.getElementById('view-waiting').classList.remove('hidden');
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
-      // Mulai pantau status di database secara berkala (setiap 3 detik) apakah status sudah 'Terverifikasi'
       if (checkStatusInterval) clearInterval(checkStatusInterval);
       checkStatusInterval = setInterval(cekStatusPembayaranKlien, 3000);
     }
@@ -567,7 +591,7 @@
     async function cekStatusPembayaranKlien() {
       if (!dbSupabase || !currentBookingId) return;
       try {
-        const { data, error } = await dbSupabase
+        const { data } = await dbSupabase
           .from('bookings')
           .select('status')
           .eq('booking_id', currentBookingId)
@@ -575,7 +599,6 @@
 
         if (data && data.status === 'Terverifikasi') {
           clearInterval(checkStatusInterval);
-          // Otomatis arahkan klien ke ruang chat konsultasi
           const linkChatKlien = `https://vetconnect.my.id/index.html?mode=chat&role=client&name=${encodeURIComponent(currentOwnerName)}&room=${currentBookingId}`;
           window.location.href = linkChatKlien;
         }
