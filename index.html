@@ -15,7 +15,7 @@
       <h1 class="text-xl font-bold flex items-center gap-2">🐾 VetBook</h1>
       <div class="flex items-center gap-2">
         <span id="db-status" class="text-[9px] bg-amber-500 text-white px-2 py-0.5 rounded-full">Connecting...</span>
-        <span id="page-tag" class="text-xs bg-teal-800 px-2 py-1 rounded-full">v5.1</span>
+        <span id="page-tag" class="text-xs bg-teal-800 px-2 py-1 rounded-full">v4.9</span>
       </div>
     </div>
   </header>
@@ -29,19 +29,6 @@
       <h2 class="text-xl font-bold text-gray-900">drh. Najib</h2>
       <p class="text-sm text-teal-600 font-medium">Vet Consultant</p>
       <p class="text-xs text-gray-500 mt-1">📍 Malang, Indonesia</p>
-    </section>
-
-    <!-- Fitur Cek Resep Berbasis Nomor WhatsApp -->
-    <section class="bg-teal-50 p-4 rounded-2xl border border-teal-200 space-y-2">
-      <h3 class="text-xs font-bold text-teal-800 flex items-center gap-1">
-        🔍 Cek Resep Berdasarkan Nomor WhatsApp
-      </h3>
-      <div class="flex gap-2">
-        <input type="tel" id="input-cek-whatsapp" placeholder="Contoh: 081234567890" class="w-full p-2 text-xs border rounded-xl focus:outline-none focus:border-teal-500 font-mono">
-        <button type="button" onclick="cekResepKlien()" class="bg-teal-700 hover:bg-teal-800 text-white px-3 py-2 rounded-xl text-xs font-bold shrink-0">
-          Cek Resep
-        </button>
-      </div>
     </section>
 
     <!-- Daftar Layanan Jasa -->
@@ -305,33 +292,13 @@
       </div>
     </div>
 
-    <!-- Modal Expired dengan Dynamic Waiting Resep & Tombol Unduh PDF -->
+    <!-- Modal Expired -->
     <div id="modal-expired" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 hidden">
-      <div class="bg-white p-6 rounded-2xl max-w-xs w-full text-center space-y-4 shadow-xl border border-gray-100">
-        <div class="text-4xl animate-pulse">⏱️</div>
-        
-        <div>
-          <h3 class="font-bold base text-gray-900">Sesi Konsultasi Selesai</h3>
-          <p class="text-xs text-gray-500 mt-1 leading-relaxed">
-            Sesi percakapan konsultasi online telah berakhir.
-          </p>
-        </div>
-
-        <!-- AREA STATUS RESEP DIGITAL REAL-TIME -->
-        <div class="bg-gray-50 p-3.5 rounded-xl border border-gray-200 text-xs space-y-2">
-          <!-- State Saat Menunggu Resep Disusun Dokter -->
-          <div id="resep-loading-state" class="flex items-center justify-center gap-2 text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
-            <span class="inline-block w-3.5 h-3.5 border-2 border-amber-600 border-t-transparent rounded-full animate-spin"></span>
-            <span class="font-medium text-[11px]">Resep sedang disusun oleh Dokter...</span>
-          </div>
-
-          <!-- Tombol Hijau Otomatis Muncul Saat Resep Selesai Diterbitkan -->
-          <a id="btn-lihat-resep" href="#" target="_blank" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-bold block shadow-md hidden text-xs transition-all">
-            📋 Lihat & Unduh Resep Digital
-          </a>
-        </div>
-
-        <button onclick="keluarKeHome()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 py-2.5 rounded-xl text-xs font-bold transition-all">
+      <div class="bg-white p-6 rounded-2xl max-w-xs text-center space-y-3">
+        <div class="text-4xl">⏱️</div>
+        <h3 class="font-bold text-lg text-gray-900">Sesi Konsultasi Selesai</h3>
+        <p class="text-xs text-gray-600">Sesi konsultasi ini telah selesai ditutup oleh admin atau masa aktifnya habis. Link tidak dapat digunakan lagi.</p>
+        <button onclick="keluarKeHome()" class="w-full bg-teal-600 text-white py-2.5 rounded-xl text-xs font-bold">
           Kembali ke Halaman Utama
         </button>
       </div>
@@ -358,6 +325,7 @@
     const SUPABASE_URL = "https://gobaqeeadobzpscqexax.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvYmFxZWVhZG9ienBzY3FleGF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODY2ODEsImV4cCI6MjEwNTE2MjY4MX0.Usq9ECO3WQ4u7CXei7ylSBkefoMgFCL03qRwROMJs7U";
     
+    // ⚠️ MASUKKAN TOKEN BOT TELEGRAM & CHAT ID ANDA DI SINI
     const TELEGRAM_BOT_TOKEN = "8882259713:AAEoyABoTPY971rtTrDgHqnRqsrRwSsrLJk"; 
     const TELEGRAM_CHAT_ID = "1611281926";
 
@@ -375,61 +343,10 @@
     let countdownInterval = null;
     let pollInterval = null;
     let checkStatusInterval = null;
-    let checkResepInterval = null;
     let vcTimerInterval = null;
     let userRole = 'client';
     let currentRoomId = '';
     let currentUserName = '';
-
-    // FUNGSI CEK RESEP BERDASARKAN NOMOR WHATSAPP DI SUPABASE
-    async function cekResepKlien() {
-      const waInput = document.getElementById('input-cek-whatsapp').value.trim();
-      if (!waInput) {
-        alert("Mohon masukkan Nomor WhatsApp Anda!");
-        return;
-      }
-
-      // Bersihkan format nomor WA (ubah 08... atau +62... menjadi format standar 62...)
-      let cleanWA = waInput.replace(/[^0-9]/g, '');
-      if (cleanWA.startsWith('0')) {
-        cleanWA = '62' + cleanWA.substring(1);
-      }
-
-      if (!dbSupabase) {
-        alert("Database belum terhubung.");
-        return;
-      }
-
-      try {
-        // Cari data booking berdasarkan nomor WhatsApp, urutkan dari yang terbaru
-        const { data, error } = await dbSupabase
-          .from('bookings')
-          .select('booking_id, resep_diagnosis')
-          .eq('whatsapp', cleanWA)
-          .order('created_at', { ascending: false })
-          .limit(1);
-
-        if (error || !data || data.length === 0) {
-          alert("Tidak ditemukan riwayat pemesanan atau resep dengan nomor WhatsApp tersebut.");
-          return;
-        }
-
-        const bookingTerbaru = data[0];
-
-        // Cek apakah resep sudah diterbitkan oleh dokter
-        if (!bookingTerbaru.resep_diagnosis) {
-          alert("Pesanan ditemukan (ID: " + bookingTerbaru.booking_id + "), namun resep digital belum diterbitkan oleh dokter. Mohon tunggu sebentar ya.");
-          return;
-        }
-
-        // Jika resep ada, langsung arahkan ke halaman resep
-        window.location.href = `resep.html?id=${bookingTerbaru.booking_id}`;
-
-      } catch (err) {
-        console.error(err);
-        alert("Terjadi kesalahan saat mencari data resep.");
-      }
-    }
 
     window.addEventListener('DOMContentLoaded', async () => {
       const urlParams = new URLSearchParams(window.location.search);
@@ -438,13 +355,16 @@
       let name = urlParams.get('name');
       let room = urlParams.get('room');
 
-      // Jika URL tidak punya parameter room, coba ambil dari localStorage (Anti-Refresh)
-      if (!room) {
-        room = localStorage.getItem('active_booking_id');
-        if (room) {
-          mode = 'chat';
-          role = 'client';
-        }
+      if (mode === 'chat' && room) {
+        sessionStorage.setItem('vet_mode', mode);
+        sessionStorage.setItem('vet_role', role);
+        sessionStorage.setItem('vet_name', name);
+        sessionStorage.setItem('vet_room', room);
+      } else {
+        mode = sessionStorage.getItem('vet_mode');
+        role = sessionStorage.getItem('vet_role');
+        name = sessionStorage.getItem('vet_name');
+        room = sessionStorage.getItem('vet_room');
       }
 
       if (dbSupabase) {
@@ -464,13 +384,6 @@
       }
 
       if (mode === 'chat' && room) {
-        // Simpan room ID ke localStorage agar aman saat halaman di-refresh
-        localStorage.setItem('active_booking_id', room);
-        
-        // Kunci URL browser agar tetap konsisten walau di-refresh
-        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + `?mode=chat&role=${role || 'client'}&room=${room}`;
-        window.history.replaceState({ path: newUrl }, '', newUrl);
-
         currentRoomId = room;
         userRole = role || 'client';
         currentUserName = name ? decodeURIComponent(name) : 'Klien';
@@ -482,9 +395,6 @@
               document.getElementById('view-main').classList.add('hidden');
               document.getElementById('view-chat').classList.remove('hidden');
               document.getElementById('modal-expired').classList.remove('hidden');
-              
-              pantauStatusResep();
-              if (!checkResepInterval) checkResepInterval = setInterval(pantauStatusResep, 3000);
               return;
             }
           } catch (e) {}
@@ -512,40 +422,37 @@
       }
     });
 
-    // FUNGSI PEMANTAU STATUS RESEP REAL-TIME DI MODAL EXPIRED
-    async function pantauStatusResep() {
-      if (!dbSupabase || !currentRoomId) return;
-      try {
-        const { data } = await dbSupabase
-          .from('bookings')
-          .select('resep_diagnosis')
-          .eq('booking_id', currentRoomId)
-          .single();
-
-        if (data && data.resep_diagnosis) {
-          if (checkResepInterval) clearInterval(checkResepInterval);
-
-          const loadingState = document.getElementById('resep-loading-state');
-          const btnResep = document.getElementById('btn-lihat-resep');
-
-          if (loadingState) loadingState.classList.add('hidden');
-          if (btnResep) {
-            btnResep.href = `resep.html?id=${currentRoomId}`;
-            btnResep.classList.remove('hidden');
-          }
-        }
-      } catch (e) {}
-    }
-
+    // FUNGSI UTAMA KIRIM NOTIFIKASI TELEGRAM
     async function kirimNotifTelegram(pesanText) {
-      if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN.includes("MASUKKAN_TOKEN")) return;
+      if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN.includes("MASUKKAN_TOKEN")) {
+        alert("⚠️ Pengingat: TELEGRAM_BOT_TOKEN belum diisi di kode index.html!");
+        return;
+      }
+      if (!TELEGRAM_CHAT_ID || TELEGRAM_CHAT_ID.includes("MASUKKAN_CHAT")) {
+        alert("⚠️ Pengingat: TELEGRAM_CHAT_ID belum diisi di kode index.html!");
+        return;
+      }
+
       try {
         const endpoint = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
         const params = new URLSearchParams();
         params.append('chat_id', TELEGRAM_CHAT_ID);
         params.append('text', pesanText);
-        await fetch(endpoint, { method: 'POST', body: params });
-      } catch (err) {}
+
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          body: params
+        });
+
+        const resData = await response.json();
+        if (!resData.ok) {
+          alert("⚠️ Telegram API Error: " + resData.description);
+        } else {
+          console.log("Pesan Telegram Berhasil Terkirim!");
+        }
+      } catch (err) {
+        alert("⚠️ Gagal mengirim pesan ke Telegram: " + err.message);
+      }
     }
 
     function aksesAdmin() {
@@ -558,9 +465,9 @@
     }
 
     function keluarKeHome() {
-      localStorage.removeItem('active_booking_id');
       sessionStorage.clear();
-      window.location.href = "index.html";
+      localStorage.clear();
+      window.location.href = "https://vetconnect.my.id/";
     }
 
     function pilihLayanan(nama, harga) {
@@ -577,8 +484,10 @@
       document.getElementById('view-main').classList.remove('hidden');
     }
 
+    // TAHAP 1: Klien Klik "Lanjut ke Pembayaran" -> Simpan DB + Kirim Notif Telegram "Pesanan Masuk"
     async function lanjutKePembayaran(evt) {
       const btn = evt ? evt.target : document.getElementById('btn-lanjut-pembayaran');
+      
       const tanggal = document.getElementById('booking-date').value;
       const pemilik = document.getElementById('owner-name').value;
       const whatsapp = document.getElementById('owner-whatsapp').value;
@@ -600,9 +509,6 @@
       currentBookingId = 'BK-' + Math.floor(100000 + Math.random() * 900000);
       currentOwnerName = pemilik;
 
-      // Simpan active booking id ke localStorage agar klien tidak kehilangan jejak pesanan
-      localStorage.setItem('active_booking_id', currentBookingId);
-
       const kodeUnik = Math.floor(Math.random() * 900) + 100;
       currentFinalPrice = hargaLayananAktif + kodeUnik;
 
@@ -622,6 +528,7 @@
         try { await dbSupabase.from('bookings').insert([dataBaru]); } catch (e) {}
       }
 
+      // 🔔 KIRIM NOTIFIKASI TELEGRAM SAAT KLIEN KLIbrowser LANJUT KE PEMBAYARAN
       const pesanTgMasuk = `🔔 PESANAN BARU MASUK (VetConnect)\n\n` +
                            `ID: ${currentBookingId}\n` +
                            `Layanan: ${layananAktif}\n` +
@@ -645,6 +552,7 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    // TAHAP 2: Klien Klik "Saya Sudah Transfer" -> Kirim Notif Telegram Konfirmasi + Masuk Waiting Screen
     async function konfirmasiSudahTransfer(evt) {
       const btn = evt ? evt.target : document.getElementById('btn-konfirmasi-transfer');
       if (btn) {
@@ -679,6 +587,7 @@
       checkStatusInterval = setInterval(cekStatusPembayaranKlien, 3000);
     }
 
+    // FUNGSI CEK STATUS BERKALA DI WAITING SCREEN KLIEN
     async function cekStatusPembayaranKlien() {
       if (!dbSupabase || !currentBookingId) return;
       try {
@@ -690,7 +599,7 @@
 
         if (data && data.status === 'Terverifikasi') {
           clearInterval(checkStatusInterval);
-          const linkChatKlien = `index.html?mode=chat&role=client&name=${encodeURIComponent(currentOwnerName)}&room=${currentBookingId}`;
+          const linkChatKlien = `https://vetconnect.my.id/index.html?mode=chat&role=client&name=${encodeURIComponent(currentOwnerName)}&room=${currentBookingId}`;
           window.location.href = linkChatKlien;
         }
       } catch (e) {}
@@ -733,11 +642,8 @@
       if (dbSupabase && currentRoomId) {
         await dbSupabase.from('bookings').update({ status: 'Selesai', is_expired: true }).eq('booking_id', currentRoomId);
       }
-      document.getElementById('view-chat').classList.remove('hidden');
+      sessionStorage.clear();
       document.getElementById('modal-expired').classList.remove('hidden');
-      
-      pantauStatusResep();
-      if (!checkResepInterval) checkResepInterval = setInterval(pantauStatusResep, 3000);
     }
 
     function handleKeyPress(e) {
@@ -795,22 +701,6 @@
     async function muatRiwayatChat() {
       if (!dbSupabase || !currentRoomId) return;
       try {
-        const { data: bookingData } = await dbSupabase
-          .from('bookings')
-          .select('status, is_expired')
-          .eq('booking_id', currentRoomId)
-          .single();
-
-        if (bookingData && (bookingData.is_expired || bookingData.status === 'Selesai')) {
-          if (pollInterval) clearInterval(pollInterval);
-          document.getElementById('view-chat').classList.remove('hidden');
-          document.getElementById('modal-expired').classList.remove('hidden');
-          
-          pantauStatusResep();
-          if (!checkResepInterval) checkResepInterval = setInterval(pantauStatusResep, 3000);
-          return;
-        }
-
         const { data } = await dbSupabase.from('messages').select('*').eq('room_id', currentRoomId).order('created_at', { ascending: true });
         if (data) renderSemuaPesan(data);
       } catch (err) {}
