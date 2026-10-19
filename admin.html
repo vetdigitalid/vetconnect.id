@@ -160,7 +160,23 @@
     let listBookingData = [];
     let activeResepBooking = null;
 
-    window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const action = urlParams.get('action');
+      const room = urlParams.get('room');
+
+      // TANGKAP KLIK TAUTAN VERIFIKASI DARI TELEGRAM DOKTER
+      if (action === 'verify' && room && dbSupabase) {
+        try {
+          await dbSupabase.from('bookings').update({ status: 'Terverifikasi' }).eq('booking_id', room);
+          // Langsung alihkan dokter masuk ke Ruang Chat Konsultasi
+          window.location.href = `index.html?mode=chat&role=vet&name=${encodeURIComponent('drh. Najib')}&room=${room}`;
+          return;
+        } catch (e) {
+          console.error("Gagal autoverifikasi via Telegram:", e);
+        }
+      }
+
       muatSemuaPesanan();
     });
 
@@ -195,7 +211,10 @@
     function renderDaftarPesanan(data) {
       const container = document.getElementById('list-pesanan');
       document.getElementById('stat-total').innerText = data.length;
-      document.getElementById('stat-pending').innerText = data.filter(d => d.status === 'Pending').length;
+      
+      // Hitung pesanan yang memerlukan verifikasi (status Pending maupun Menunggu Konfirmasi)
+      const pendingCount = data.filter(d => d.status === 'Pending' || d.status === 'Menunggu Konfirmasi').length;
+      document.getElementById('stat-pending').innerText = pendingCount;
 
       if (data.length === 0) {
         container.innerHTML = `<p class="text-xs text-gray-400 text-center py-6">Belum ada pesanan masuk.</p>`;
@@ -204,14 +223,14 @@
 
       let html = '';
       data.forEach(item => {
-        const isPending = item.status === 'Pending';
+        const isPerluVerifikasi = item.status === 'Pending' || item.status === 'Menunggu Konfirmasi';
         const linkDokter = `https://vetconnect.my.id/index.html?mode=chat&role=vet&name=${encodeURIComponent('drh. Najib')}&room=${item.booking_id}`;
 
         html += `
           <div class="p-4 rounded-xl border border-gray-200 bg-gray-50 space-y-3">
             <div class="flex justify-between items-start">
               <div>
-                <span class="text-[10px] font-bold px-2 py-0.5 rounded ${isPending ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}">
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded ${isPerluVerifikasi ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}">
                   ${item.status || 'Pending'}
                 </span>
                 <h3 class="font-bold text-sm text-gray-900 mt-1">${item.nama_pemilik} (${item.info_hewan})</h3>
@@ -226,9 +245,9 @@
             </div>
 
             <div class="flex flex-wrap gap-2 pt-1">
-              ${isPending ? `
-                <button onclick="verifikasiDanKirimWA('${item.booking_id}', '${item.nama_pemilik}', '${item.whatsapp}', '${item.layanan}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold">
-                  ✅ Verifikasi & Kirim Link WA
+              ${isPerluVerifikasi ? `
+                <button onclick="verifikasiManual('${item.booking_id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold">
+                  ✅ Konfirmasi Lunas
                 </button>
               ` : ''}
 
@@ -247,19 +266,10 @@
       container.innerHTML = html;
     }
 
-    async function verifikasiDanKirimWA(bookingId, nama, wa, layanan) {
+    async function verifikasiManual(bookingId) {
       if (dbSupabase) {
         await dbSupabase.from('bookings').update({ status: 'Terverifikasi' }).eq('booking_id', bookingId);
       }
-
-      const linkKlien = `https://vetconnect.my.id/index.html?mode=chat&role=client&name=${encodeURIComponent(nama)}&room=${bookingId}`;
-      
-      const pesanWA = `Halo Kak ${nama}, pembayaran pesanan *${layanan}* Anda telah diverifikasi.\n\n` +
-                       `Silakan masuk ke Ruang Konsultasi TeleVet melalui tautan resmi berikut:\n` +
-                       `${linkKlien}\n\n` +
-                       `Terima kasih dan selamat berkonsultasi dengan drh. Najib! 🙏✨`;
-
-      window.open(`https://wa.me/${wa}?text=${encodeURIComponent(pesanWA)}`, '_blank');
       muatSemuaPesanan();
     }
 
