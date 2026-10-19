@@ -422,7 +422,6 @@
       }
     });
 
-    // FUNGSI UTAMA KIRIM NOTIFIKASI TELEGRAM
     async function kirimNotifTelegram(pesanText) {
       if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN.includes("MASUKKAN_TOKEN")) {
         alert("⚠️ Pengingat: TELEGRAM_BOT_TOKEN belum diisi di kode index.html!");
@@ -467,7 +466,7 @@
     function keluarKeHome() {
       sessionStorage.clear();
       localStorage.clear();
-      window.location.href = "https://vetconnect.my.id/";
+      window.location.href = "index.html";
     }
 
     function pilihLayanan(nama, harga) {
@@ -484,7 +483,6 @@
       document.getElementById('view-main').classList.remove('hidden');
     }
 
-    // TAHAP 1: Klien Klik "Lanjut ke Pembayaran" -> Simpan DB + Kirim Notif Telegram "Pesanan Masuk"
     async function lanjutKePembayaran(evt) {
       const btn = evt ? evt.target : document.getElementById('btn-lanjut-pembayaran');
       
@@ -528,7 +526,6 @@
         try { await dbSupabase.from('bookings').insert([dataBaru]); } catch (e) {}
       }
 
-      // 🔔 KIRIM NOTIFIKASI TELEGRAM SAAT KLIEN KLIbrowser LANJUT KE PEMBAYARAN
       const pesanTgMasuk = `🔔 PESANAN BARU MASUK (VetConnect)\n\n` +
                            `ID: ${currentBookingId}\n` +
                            `Layanan: ${layananAktif}\n` +
@@ -552,7 +549,6 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // TAHAP 2: Klien Klik "Saya Sudah Transfer" -> Kirim Notif Telegram Konfirmasi + Masuk Waiting Screen
     async function konfirmasiSudahTransfer(evt) {
       const btn = evt ? evt.target : document.getElementById('btn-konfirmasi-transfer');
       if (btn) {
@@ -587,7 +583,6 @@
       checkStatusInterval = setInterval(cekStatusPembayaranKlien, 3000);
     }
 
-    // FUNGSI CEK STATUS BERKALA DI WAITING SCREEN KLIEN
     async function cekStatusPembayaranKlien() {
       if (!dbSupabase || !currentBookingId) return;
       try {
@@ -599,7 +594,7 @@
 
         if (data && data.status === 'Terverifikasi') {
           clearInterval(checkStatusInterval);
-          const linkChatKlien = `https://vetconnect.my.id/index.html?mode=chat&role=client&name=${encodeURIComponent(currentOwnerName)}&room=${currentBookingId}`;
+          const linkChatKlien = `index.html?mode=chat&role=client&name=${encodeURIComponent(currentOwnerName)}&room=${currentBookingId}`;
           window.location.href = linkChatKlien;
         }
       } catch (e) {}
