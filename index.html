@@ -15,7 +15,7 @@
       <h1 class="text-xl font-bold flex items-center gap-2">🐾 VetBook</h1>
       <div class="flex items-center gap-2">
         <span id="db-status" class="text-[9px] bg-amber-500 text-white px-2 py-0.5 rounded-full">Connecting...</span>
-        <span id="page-tag" class="text-xs bg-teal-800 px-2 py-1 rounded-full">v4.3 Pro</span>
+        <span id="page-tag" class="text-xs bg-teal-800 px-2 py-1 rounded-full">v4.2 Pro</span>
       </div>
     </div>
   </header>
@@ -128,9 +128,9 @@
       </div>
     </section>
 
-    <!-- Form Booking -->
+    <!-- Form Booking & Pembayaran -->
     <section id="section-booking" class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-4 hidden">
-      <h3 class="text-md font-bold text-teal-700 border-b pb-2">📅 Formulir Pemesanan</h3>
+      <h3 class="text-md font-bold text-teal-700 border-b pb-2">📅 Formulir Pemesanan & Pembayaran</h3>
 
       <div>
         <label class="block text-xs font-semibold text-gray-600 mb-1">Item / Layanan Terpilih</label>
@@ -148,17 +148,27 @@
       </div>
 
       <div>
-        <label class="block text-xs font-semibold text-gray-600 mb-1">Nomor WhatsApp Aktif</label>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Nomor WhatsApp Aktif (untuk pengiriman link)</label>
         <input type="tel" id="owner-whatsapp" placeholder="Contoh: 081234567890" class="w-full p-2.5 border rounded-lg text-sm">
       </div>
 
       <div>
         <label class="block text-xs font-semibold text-gray-600 mb-1">Nama & Jenis Hewan / Keluhan Singkat</label>
-        <input type="text" id="pet-info" placeholder="Contoh: Miko (Kucing Persia) / Lemes" class="w-full p-2.5 border rounded-lg text-sm">
+        <input type="text" id="pet-info" placeholder="Contoh: Miko (Kucing Persia) / Lemes & tidak mau makan" class="w-full p-2.5 border rounded-lg text-sm">
       </div>
 
-      <button type="button" onclick="lanjutKePembayaran()" class="w-full bg-teal-600 text-white py-3 rounded-xl font-bold shadow-lg text-sm hover:bg-teal-700 active:scale-95 transition-all flex items-center justify-center gap-2">
-        <span>💳 Lanjut ke Instruksi Pembayaran</span>
+      <div class="bg-teal-50 border border-teal-200 p-3.5 rounded-xl text-xs space-y-1.5">
+        <p class="font-bold text-teal-900">💳 Instruksi Pembayaran Transfer:</p>
+        <p class="text-gray-700">Silakan transfer biaya ke rekening resmi berikut:</p>
+        <div class="bg-white p-2.5 rounded-lg border border-teal-100 font-mono text-gray-800 space-y-1">
+          <p class="font-bold text-teal-700">BCA: 0300664695</p>
+          <p class="text-gray-600">a.n. Nur Rohman Najib</p>
+        </div>
+        <p class="text-gray-500 italic">*Setelah transfer, klik tombol di bawah untuk mengirim bukti dan konfirmasi ke Admin.</p>
+      </div>
+
+      <button type="button" onclick="kirimKeAdmin()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold shadow-lg text-sm hover:bg-emerald-700 active:scale-95 transition-all flex items-center justify-center gap-2">
+        <span>📲 Kirim Konfirmasi Pembayaran ke Admin</span>
       </button>
     </section>
 
@@ -169,44 +179,6 @@
         🔐 Panel Admin Verifikasi
       </button>
     </footer>
-  </main>
-
-
-  <!-- TAMPILAN 1.5: HALAMAN INSTRUKSI PEMBAYARAN TRANSFER KODE UNIK -->
-  <main id="view-payment" class="max-w-md mx-auto p-4 space-y-4 hidden">
-    <div class="bg-white p-5 rounded-2xl shadow-sm border space-y-4">
-      <div class="border-b pb-2 flex justify-between items-center">
-        <h3 class="font-bold text-teal-800 text-sm">💳 Instruksi Transfer Bank</h3>
-        <span id="pay-booking-id" class="text-xs font-mono bg-teal-50 text-teal-700 px-2 py-0.5 rounded"></span>
-      </div>
-
-      <div class="bg-teal-50 p-4 rounded-xl border border-teal-100 text-center space-y-1">
-        <p class="text-xs text-gray-600">Total Nominal Pembayaran (Termasuk Kode Unik):</p>
-        <p id="pay-total-amount" class="text-2xl font-black text-teal-800">Rp 0</p>
-        <p class="text-[10px] text-teal-600 font-medium">*Harap transfer persis hingga 3 digit terakhir</p>
-      </div>
-
-      <div class="bg-gray-50 p-3.5 rounded-xl border text-xs space-y-2">
-        <p class="font-bold text-gray-800">Silakan transfer melalui rekening resmi berikut:</p>
-        <div class="bg-white p-3 rounded-lg border font-mono text-gray-800 space-y-1">
-          <p class="font-bold text-teal-700 text-sm">Bank BCA: 0300664695</p>
-          <p class="text-gray-600">Atas Nama: Nur Rohman Najib</p>
-        </div>
-      </div>
-
-      <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl text-[11px] text-amber-900 leading-relaxed">
-        <p class="font-bold mb-0.5">⚠️ Perhatian:</p>
-        Setelah Anda melakukan transfer sesuai nominal di atas, klik tombol konfirmasi di bawah untuk langsung masuk ke ruang konsultasi dengan dokter.
-      </div>
-
-      <button type="button" onclick="prosesSimulasiPembayaran()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-emerald-700 active:scale-95 transition-all shadow-md">
-        ✅ Saya Sudah Transfer, Masuk Konsultasi
-      </button>
-      
-      <button type="button" onclick="kembaliKeBooking()" class="w-full text-xs text-gray-500 underline text-center pt-1">
-        ⬅️ Kembali ke Data Pesanan
-      </button>
-    </div>
   </main>
 
 
@@ -312,14 +284,13 @@
     }
 
     let layananAktif = '';
-    let hargaLayananAktif = 0;
-    let currentBookingId = '';
-    let currentOwnerName = '';
     let selectedMedia = null;
     let countdownInterval = null;
     let pollInterval = null;
     let vcTimerInterval = null;
     let userRole = 'client';
+    let currentRoomId = '';
+    let currentUserName = '';
 
     window.addEventListener('DOMContentLoaded', async () => {
       const urlParams = new URLSearchParams(window.location.search);
@@ -361,6 +332,7 @@
         userRole = role || 'client';
         currentUserName = name ? decodeURIComponent(name) : 'Klien';
 
+        // CEK STATUS KEDALUARSA DI SUPABASE
         if (dbSupabase) {
           try {
             const { data } = await dbSupabase.from('bookings').select('status, is_expired').eq('booking_id', room).single();
@@ -388,7 +360,6 @@
         pollInterval = setInterval(muatRiwayatChat, 2000);
       } else {
         document.getElementById('view-main').classList.remove('hidden');
-        document.getElementById('view-payment').classList.add('hidden');
         document.getElementById('view-chat').classList.add('hidden');
       }
     });
@@ -410,20 +381,13 @@
 
     function pilihLayanan(nama, harga) {
       layananAktif = nama;
-      hargaLayananAktif = harga;
       document.getElementById('selected-service').value = `${nama} - Rp ${harga.toLocaleString('id-ID')}`;
       const formSection = document.getElementById('section-booking');
       formSection.classList.remove('hidden');
       formSection.scrollIntoView({ behavior: 'smooth' });
     }
 
-    function kembaliKeBooking() {
-      document.getElementById('view-payment').classList.add('hidden');
-      document.getElementById('view-main').classList.remove('hidden');
-    }
-
-    // TAHAP 1: Klien klik lanjut pembayaran -> Simpan ke DB & Kirim Notif WA ke Admin (drh. Najib)
-    async function lanjutKePembayaran() {
+    async function kirimKeAdmin() {
       const tanggal = document.getElementById('booking-date').value;
       const pemilik = document.getElementById('owner-name').value;
       const whatsapp = document.getElementById('owner-whatsapp').value;
@@ -437,15 +401,9 @@
       let cleanWA = whatsapp.replace(/[^0-9]/g, '');
       if (cleanWA.startsWith('0')) cleanWA = '62' + cleanWA.substring(1);
 
-      currentBookingId = 'BK-' + Math.floor(100000 + Math.random() * 900000);
-      currentOwnerName = pemilik;
-
-      // Otomatis tambahkan kode unik 3 digit di belakang (rentang 100 - 999)
-      const kodeUnik = Math.floor(Math.random() * 900) + 100;
-      const finalPrice = hargaLayananAktif + kodeUnik;
-
+      const bookingId = 'BK-' + Math.floor(100000 + Math.random() * 900000);
       const dataBaru = {
-        booking_id: currentBookingId,
+        booking_id: bookingId,
         nama_pemilik: pemilik, 
         whatsapp: cleanWA,
         info_hewan: hewan, 
@@ -460,51 +418,18 @@
         try { await dbSupabase.from('bookings').insert([dataBaru]); } catch (e) {}
       }
 
-      // Notifikasi WA ke Admin / drh. Najib (081215667746) saat klien masuk halaman pembayaran
       const adminWA = "6281215667746";
-      const pesanNotifAdmin = `🔔 *INFO PESANAN MASUK (VetBook)*\n\n` +
-                              `🆔 ID: ${currentBookingId}\n` +
-                              `📌 Layanan: ${layananAktif}\n` +
-                              `👤 Klien: ${pemilik} (${cleanWA})\n` +
-                              `🐾 Hewan: ${hewan}\n` +
-                              `📅 Tanggal: ${tanggal}\n\n` +
-                              `Status: Klien sedang melihat instruksi transfer kode unik.`;
-
-      window.open(`https://wa.me/${adminWA}?text=${encodeURIComponent(pesanNotifAdmin)}`, '_blank');
-
-      // Tampilkan Halaman Instruksi Pembayaran Transfer
-      document.getElementById('pay-booking-id').innerText = currentBookingId;
-      document.getElementById('pay-total-amount').innerText = `Rp ${finalPrice.toLocaleString('id-ID')}`;
       
-      document.getElementById('view-main').classList.add('hidden');
-      document.getElementById('view-payment').classList.remove('hidden');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+      const pesanAdmin = `Halo Admin VetBook, saya ingin mengonfirmasi pembayaran pesanan:\n\n` +
+                         `🆔 ID: ${bookingId}\n` +
+                         `📌 Layanan: ${layananAktif}\n` +
+                         `📅 Tanggal: ${tanggal}\n` +
+                         `👤 Nama: ${pemilik}\n` +
+                         `📱 No. WA Klien: ${cleanWA}\n` +
+                         `🐾 Info Hewan: ${hewan}\n\n` +
+                         `💳 Status: Saya telah melakukan transfer pembayaran. Mohon verifikasi dan kirimkan link akses TeleVet. Terima kasih!`;
 
-    // TAHAP 2: Klien klik Selesaikan Pembayaran -> Kirim Notif WA dari Sistem (085725175566) ke Admin & Masuk Ruang Chat
-    async function prosesSimulasiPembayaran() {
-      if (dbSupabase) {
-        try {
-          await dbSupabase.from('bookings').update({ status: 'Terverifikasi' }).eq('booking_id', currentBookingId);
-        } catch (e) {}
-      }
-
-      const linkChatKlien = `https://vetconnect.my.id/index.html?mode=chat&role=client&name=${encodeURIComponent(currentOwnerName)}&room=${currentBookingId}`;
-      const linkChatDokter = `https://vetconnect.my.id/index.html?mode=chat&role=vet&name=${encodeURIComponent('drh. Najib')}&room=${currentBookingId}`;
-
-      const tujuanAdminWA = "6281215667746"; // Nomor drh. Najib
-      
-      const pesanSistemKeAdmin = `✅ *PEMBAYARAN TERVERIFIKASI (Sistem VetConnect)*\n\n` +
-                                 `🆔 ID: ${currentBookingId}\n` +
-                                 `👤 Klien: ${currentOwnerName}\n` +
-                                 `📌 Layanan: ${layananAktif}\n\n` +
-                                 `Silakan masuk ke Ruang Konsultasi Dokter:\n${linkChatDokter}`;
-
-      window.open(`https://wa.me/${tujuanAdminWA}?text=${encodeURIComponent(pesanSistemKeAdmin)}`, '_blank');
-
-      alert("🎉 Pembayaran Berhasil Terverifikasi! Anda akan diarahkan ke Ruang Konsultasi Dokter.");
-      
-      window.location.href = linkChatKlien;
+      window.location.href = `whatsapp://send?phone=${adminWA}&text=${encodeURIComponent(pesanAdmin)}`;
     }
 
     function initClientTimer(durationSeconds) {
