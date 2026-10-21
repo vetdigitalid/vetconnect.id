@@ -15,7 +15,7 @@
       <h1 class="text-xl font-bold flex items-center gap-2">🐾 VetBook</h1>
       <div class="flex items-center gap-2">
         <span id="db-status" class="text-[9px] bg-amber-500 text-white px-2 py-0.5 rounded-full">Connecting...</span>
-        <span id="page-tag" class="text-xs bg-teal-800 px-2 py-1 rounded-full">v4.9</span>
+        <span id="page-tag" class="text-xs bg-teal-800 px-2 py-1 rounded-full">v5.3</span>
       </div>
     </div>
   </header>
@@ -46,7 +46,7 @@
             <span class="text-[9px] font-bold bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded">PROMO</span>
           </div>
         </div>
-        <button type="button" onclick="pilihLayanan('TeleVet (Pet n Poultry)', 35000)" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-teal-700 active:scale-95 transition-all shrink-0">
+        <button type="button" onclick="pilihLayanan('TeleVet (Pet n Poultry)', 35000, '')" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-teal-700 active:scale-95 transition-all shrink-0">
           Pilih
         </button>
       </div>
@@ -57,13 +57,13 @@
           <p class="text-xs text-gray-500">Layanan kunjungan (no include)</p>
           <p class="text-sm font-semibold text-teal-600 mt-1">Rp 250.000</p>
         </div>
-        <button type="button" onclick="pilihLayanan('Vaksinasi Anabul', 250000)" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-teal-700 active:scale-95 transition-all shrink-0">
+        <button type="button" onclick="pilihLayanan('Vaksinasi Anabul', 250000, '')" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-teal-700 active:scale-95 transition-all shrink-0">
           Pilih
         </button>
       </div>
     </section>
 
-    <!-- Digital Produk -->
+    <!-- Digital Produk (Dilengkapi Link Download Masing-Masing) -->
     <section class="space-y-3">
       <h3 class="text-md font-bold text-gray-800 flex items-center gap-1">📚 Digital Produk</h3>
 
@@ -74,7 +74,8 @@
           <h4 class="font-bold text-gray-900 mt-1 text-sm">Kalkulator Formulasi Pakan Mandiri</h4>
           <p class="text-sm font-semibold text-teal-600 mt-1">Rp 55.000</p>
         </div>
-        <button type="button" onclick="pilihLayanan('Digital Produk: Kalkulator Formulasi Pakan Mandiri', 55000)" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-teal-700 active:scale-95 transition-all shrink-0">
+        <!-- ⚠️ Ganti link Google Drive / file spreadsheet Anda di parameter ketiga -->
+        <button type="button" onclick="pilihLayanan('Digital Produk: Kalkulator Formulasi Pakan Mandiri', 55000, 'https://drive.google.com/your-spreadsheet-link')" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-teal-700 active:scale-95 transition-all shrink-0">
           Beli
         </button>
       </div>
@@ -86,7 +87,7 @@
           <h4 class="font-bold text-gray-900 mt-1 text-sm">Panduan Pemeliharaan Unggas Yang Efisien & Minim Bau</h4>
           <p class="text-sm font-semibold text-teal-600 mt-1">Rp 99.000</p>
         </div>
-        <button type="button" onclick="pilihLayanan('Digital Produk: Panduan Unggas Minim Bau', 99000)" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-teal-700 active:scale-95 transition-all shrink-0">
+        <button type="button" onclick="pilihLayanan('Digital Produk: Panduan Unggas Minim Bau', 99000, 'https://drive.google.com/your-ebook-1-link')" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-teal-700 active:scale-95 transition-all shrink-0">
           Beli
         </button>
       </div>
@@ -98,7 +99,7 @@
           <h4 class="font-bold text-gray-900 mt-1 text-sm">Cegah Sebelum Mahal - Resep Sehat Anabul Hemat ala Dokter Hewan</h4>
           <p class="text-sm font-semibold text-teal-600 mt-1">Rp 69.000</p>
         </div>
-        <button type="button" onclick="pilihLayanan('Digital Produk: Cegah Sebelum Mahal', 69000)" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-teal-700 active:scale-95 transition-all shrink-0">
+        <button type="button" onclick="pilihLayanan('Digital Produk: Cegah Sebelum Mahal', 69000, 'https://drive.google.com/your-ebook-2-link')" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-teal-700 active:scale-95 transition-all shrink-0">
           Beli
         </button>
       </div>
@@ -110,7 +111,7 @@
           <h4 class="font-bold text-gray-900 mt-1 text-sm">Strategi Vet Dapatkan Cash Flow Legal Tanpa Harus Buka Klinik Sendiri</h4>
           <p class="text-sm font-semibold text-teal-600 mt-1">Rp 119.000</p>
         </div>
-        <button type="button" onclick="pilihLayanan('Digital Produk: Strategi Vet Cash Flow Legal', 119000)" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-teal-700 active:scale-95 transition-all shrink-0">
+        <button type="button" onclick="pilihLayanan('Digital Produk: Strategi Vet Cash Flow Legal', 119000, 'https://drive.google.com/your-ebook-3-link')" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-teal-700 active:scale-95 transition-all shrink-0">
           Beli
         </button>
       </div>
@@ -122,13 +123,13 @@
           <h4 class="font-bold text-gray-900 mt-1 text-sm">P3K Anabul - Panduan Praktis & Langkah Cepat Penanganan Darurat Anabul di Rumah</h4>
           <p class="text-sm font-semibold text-teal-600 mt-1">Rp 60.000</p>
         </div>
-        <button type="button" onclick="pilihLayanan('Digital Produk: P3K Anabul', 60000)" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-teal-700 active:scale-95 transition-all shrink-0">
+        <button type="button" onclick="pilihLayanan('Digital Produk: P3K Anabul', 60000, 'https://drive.google.com/your-ebook-4-link')" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-teal-700 active:scale-95 transition-all shrink-0">
           Beli
         </button>
       </div>
     </section>
 
-    <!-- Form Booking -->
+    <!-- Form Pemesanan -->
     <section id="section-booking" class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-4 hidden">
       <h3 class="text-md font-bold text-teal-700 border-b pb-2">📅 Formulir Pemesanan</h3>
 
@@ -152,7 +153,7 @@
         <input type="tel" id="owner-whatsapp" placeholder="Contoh: 081234567890" class="w-full p-2.5 border rounded-lg text-sm">
       </div>
 
-      <div>
+      <div id="div-pet-info">
         <label class="block text-xs font-semibold text-gray-600 mb-1">Nama & Jenis Hewan / Keluhan Singkat</label>
         <input type="text" id="pet-info" placeholder="Contoh: Miko (Kucing Persia) / Lemes" class="w-full p-2.5 border rounded-lg text-sm">
       </div>
@@ -219,12 +220,35 @@
         Pembayaran Anda sedang dalam proses peninjauan dan verifikasi oleh <span class="font-bold text-teal-700">drh. Najib</span>.
       </p>
       <div class="bg-teal-50 border border-teal-200 p-3 rounded-xl text-[11px] text-teal-800">
-        Halaman ini akan otomatis masuk ke ruang konsultasi begitu pembayaran Anda dikonfirmasi lunas oleh dokter.
+        Halaman ini akan otomatis diperbarui begitu pembayaran Anda dikonfirmasi lunas oleh dokter.
       </div>
       <div class="pt-2">
         <span class="inline-block w-4 h-4 border-2 border-teal-600 border-t-transparent rounded-full animate-spin"></span>
         <span class="text-[11px] text-gray-400 ml-2">Menghubungkan ke server...</span>
       </div>
+    </div>
+  </main>
+
+
+  <!-- TAMPILAN 1.9: HALAMAN SUKSES UNDUH PRODUK DIGITAL -->
+  <main id="view-download" class="max-w-md mx-auto p-6 space-y-6 hidden text-center">
+    <div class="bg-white p-8 rounded-2xl shadow-xl border border-emerald-100 space-y-4">
+      <div class="text-6xl">🎉</div>
+      <h3 class="font-bold text-emerald-800 text-lg">Pembayaran Berhasil!</h3>
+      <p class="text-xs text-gray-600 leading-relaxed">
+        Terima kasih! Pembayaran Anda telah terverifikasi lunas oleh <span class="font-bold text-teal-700">drh. Najib</span>.
+      </p>
+
+      <div class="bg-teal-50 border border-teal-200 p-4 rounded-2xl space-y-3">
+        <p id="download-product-title" class="font-bold text-xs text-teal-900"></p>
+        <a id="btn-download-file" href="#" target="_blank" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold block text-xs shadow-lg transition-all animate-pulse">
+          📥 Download Produk Digital Sekarang
+        </a>
+      </div>
+
+      <button onclick="keluarKeHome()" class="w-full text-xs text-gray-400 underline pt-2">
+        Kembali ke Halaman Utama
+      </button>
     </div>
   </main>
 
@@ -325,7 +349,6 @@
     const SUPABASE_URL = "https://gobaqeeadobzpscqexax.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvYmFxZWVhZG9ienBzY3FleGF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODY2ODEsImV4cCI6MjEwNTE2MjY4MX0.Usq9ECO3WQ4u7CXei7ylSBkefoMgFCL03qRwROMJs7U";
     
-    // ⚠️ MASUKKAN TOKEN BOT TELEGRAM & CHAT ID ANDA DI SINI
     const TELEGRAM_BOT_TOKEN = "8882259713:AAHAoutxZMfoBjCVkazqDZWG94Lc1CiE5WU"; 
     const TELEGRAM_CHAT_ID = "1611281926";
 
@@ -336,6 +359,7 @@
 
     let layananAktif = '';
     let hargaLayananAktif = 0;
+    let linkDownloadAktif = '';
     let currentBookingId = '';
     let currentOwnerName = '';
     let currentFinalPrice = 0;
@@ -418,6 +442,7 @@
         document.getElementById('view-main').classList.remove('hidden');
         document.getElementById('view-payment').classList.add('hidden');
         document.getElementById('view-waiting').classList.add('hidden');
+        document.getElementById('view-download').classList.add('hidden');
         document.getElementById('view-chat').classList.add('hidden');
       }
     });
@@ -469,10 +494,22 @@
       window.location.href = "index.html";
     }
 
-    function pilihLayanan(nama, harga) {
+    function pilihLayanan(nama, harga, linkDownload) {
       layananAktif = nama;
       hargaLayananAktif = harga;
+      linkDownloadAktif = linkDownload || '';
+
       document.getElementById('selected-service').value = `${nama} - Rp ${harga.toLocaleString('id-ID')}`;
+      
+      const petInfoDiv = document.getElementById('div-pet-info');
+      if (nama.startsWith('Digital Produk:')) {
+        petInfoDiv.classList.add('hidden');
+        document.getElementById('pet-info').value = '- (Pembelian Digital Produk)';
+      } else {
+        petInfoDiv.classList.remove('hidden');
+        document.getElementById('pet-info').value = '';
+      }
+
       const formSection = document.getElementById('section-booking');
       formSection.classList.remove('hidden');
       formSection.scrollIntoView({ behavior: 'smooth' });
@@ -491,7 +528,7 @@
       const whatsapp = document.getElementById('owner-whatsapp').value;
       const hewan = document.getElementById('pet-info').value;
 
-      if (!tanggal || !pemilik || !whatsapp || !hewan) {
+      if (!tanggal || !pemilik || !whatsapp || (!hewan && !layananAktif.startsWith('Digital Produk:'))) {
         alert('Mohon lengkapi semua data pemesanan!');
         return;
       }
@@ -514,9 +551,10 @@
         booking_id: currentBookingId,
         nama_pemilik: pemilik, 
         whatsapp: cleanWA,
-        info_hewan: hewan, 
+        info_hewan: hewan || '-', 
         layanan: layananAktif, 
         tanggal_booking: tanggal,
+        resep_edukasi: linkDownloadAktif, // Menyimpan link download produk pada kolom ini
         status: 'Pending',
         is_expired: false,
         created_at: new Date().toISOString()
@@ -528,9 +566,8 @@
 
       const pesanTgMasuk = `🔔 PESANAN BARU MASUK (VetConnect)\n\n` +
                            `ID: ${currentBookingId}\n` +
-                           `Layanan: ${layananAktif}\n` +
+                           `Item: ${layananAktif}\n` +
                            `Klien: ${pemilik} (WA: ${cleanWA})\n` +
-                           `Hewan: ${hewan}\n` +
                            `Total Tagihan: Rp ${currentFinalPrice.toLocaleString('id-ID')}\n\n` +
                            `Status: Klien sedang melihat instruksi transfer BCA.`;
 
@@ -567,10 +604,10 @@
       const pesanTgKonfirmasi = `💳 KONFIRMASI PEMBAYARAN DIPERLUKAN\n\n` +
                                 `ID: ${currentBookingId}\n` +
                                 `Klien: ${currentOwnerName}\n` +
-                                `Layanan: ${layananAktif}\n` +
+                                `Item: ${layananAktif}\n` +
                                 `Total Transfer: Rp ${currentFinalPrice.toLocaleString('id-ID')}\n\n` +
                                 `Klien telah mengonfirmasi transfer. Silakan cek mutasi BCA Anda.\n\n` +
-                                `KLIK LINK DISINI UNTUK KONFIRMASI LUNAS & MASUK CHAT:\n` +
+                                `KLIK LINK DISINI UNTUK KONFIRMASI LUNAS:\n` +
                                 `${linkVerify}`;
 
       await kirimNotifTelegram(pesanTgKonfirmasi);
@@ -588,14 +625,23 @@
       try {
         const { data } = await dbSupabase
           .from('bookings')
-          .select('status')
+          .select('status, layanan, resep_edukasi')
           .eq('booking_id', currentBookingId)
           .single();
 
         if (data && data.status === 'Terverifikasi') {
           clearInterval(checkStatusInterval);
-          const linkChatKlien = `index.html?mode=chat&role=client&name=${encodeURIComponent(currentOwnerName)}&room=${currentBookingId}`;
-          window.location.href = linkChatKlien;
+
+          // Pengecekan apakah pesanan berupa Digital Produk atau Layanan Jasa
+          if (data.layanan && data.layanan.startsWith('Digital Produk:')) {
+            document.getElementById('view-waiting').classList.add('hidden');
+            document.getElementById('download-product-title').innerText = data.layanan;
+            document.getElementById('btn-download-file').href = data.resep_edukasi || '#';
+            document.getElementById('view-download').classList.remove('hidden');
+          } else {
+            const linkChatKlien = `index.html?mode=chat&role=client&name=${encodeURIComponent(currentOwnerName)}&room=${currentBookingId}`;
+            window.location.href = linkChatKlien;
+          }
         }
       } catch (e) {}
     }
